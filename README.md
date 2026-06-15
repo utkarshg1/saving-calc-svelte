@@ -9,6 +9,7 @@ A SvelteKit savings planner that helps you figure out how much to invest monthly
 - **Monthly RD planning** — calculates exact and rounded-up monthly deposit amounts (nearest ₹1,000)
 - **Quarterly compounding** — RD maturity uses `n = years × 4`, `i = rate ÷ 400`
 - **Live KPI cards** — monthly investment, maturity amount, interest earned, effective compounding
+- **TDS calculation** — Section 194A net maturity after tax (₹40k/₹50k threshold, 10%/20% rate, Form 15G/15H)
 - **Interactive charts** — growth over time, amount comparison, principal vs interest breakdown
 - **Maximizable charts** — expand any chart to fullscreen with tooltips on hover or tap
 - **Calculation flowchart** — vertical step-by-step explanation of the full formula chain
@@ -48,6 +49,20 @@ Open the URL shown in the terminal (typically `http://localhost:5173`).
 4. **RD maturity** — `M = R × [((1 + i)^n − 1) / (1 − (1 + i)^(−1/3))]`
 
 Where `R` = monthly deposit, `n` = quarters, `i` = annual rate ÷ 400.
+
+## TDS (Section 194A)
+
+At RD maturity, interest is subject to TDS even on direct RD → FD rollover:
+
+| Rule | Value |
+|------|-------|
+| FY interest threshold (non-senior) | ₹40,000 |
+| FY interest threshold (senior citizen) | ₹50,000 |
+| TDS rate (PAN linked) | 10% |
+| TDS rate (no PAN) | 20% |
+| Form 15G / 15H submitted | Nil TDS |
+
+`Net Maturity = Gross Maturity − (Interest × TDS rate)` when aggregate FY interest exceeds the threshold.
 
 ## Scripts
 

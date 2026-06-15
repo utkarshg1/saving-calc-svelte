@@ -1,16 +1,18 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
 	import type { SavingsInputs, SavingsResult } from '$lib/calculations/savings';
-	import { formatINR, formatNumber } from '$lib/utils/format';
+	import type { TdsResult } from '$lib/calculations/tds';
+	import { formatINR, formatNumber, formatPercent } from '$lib/utils/format';
 
 	interface Props {
 		inputs: SavingsInputs;
 		result: SavingsResult;
+		tdsResult?: TdsResult;
 	}
 
-	let { inputs, result }: Props = $props();
+	let { inputs, result, tdsResult }: Props = $props();
 
-	const steps = $derived([
+	const baseSteps = $derived([
 		{
 			id: 1,
 			title: 'Target Amount',
@@ -70,6 +72,22 @@
 			highlight: true
 		}
 	]);
+
+	const steps = $derived(
+		tdsResult?.tdsApplicable
+			? [
+					...baseSteps,
+					{
+						id: 9,
+						title: 'Net after TDS',
+						formula: `Gross − TDS (${formatPercent(tdsResult.tdsRate * 100, 0)} on interest)`,
+						value: formatINR(tdsResult.netMaturityAfterTds),
+						color: 'from-cyan-500 to-cyan-600',
+						highlight: true
+					}
+				]
+			: baseSteps
+	);
 </script>
 
 <div class="flow-container w-full max-w-full overflow-hidden">

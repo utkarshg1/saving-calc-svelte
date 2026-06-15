@@ -8,14 +8,27 @@
 	import GrowthChart from '$lib/components/GrowthChart.svelte';
 	import ComparisonChart from '$lib/components/ComparisonChart.svelte';
 	import BreakdownChart from '$lib/components/BreakdownChart.svelte';
+	import TdsPanel from '$lib/components/TdsPanel.svelte';
 	import {
 		calculateSavings,
 		DEFAULT_INPUTS,
 		type SavingsInputs
 	} from '$lib/calculations/savings';
+	import { calculateTds, DEFAULT_TDS_INPUTS, type TdsInputs } from '$lib/calculations/tds';
 
 	let inputs = $state<SavingsInputs>({ ...DEFAULT_INPUTS });
+	let tdsInputs = $state<TdsInputs>({ ...DEFAULT_TDS_INPUTS });
 	let result = $derived(calculateSavings(inputs));
+	let tdsResult = $derived(
+		calculateTds({
+			totalInterest: result.interestEarned,
+			grossMaturity: result.rdMaturity,
+			otherInterestThisFY: tdsInputs.otherInterestThisFY,
+			isSeniorCitizen: tdsInputs.isSeniorCitizen,
+			hasPAN: tdsInputs.hasPAN,
+			form15GHSubmitted: tdsInputs.form15GHSubmitted
+		})
+	);
 
 	type ChartId = 'growth' | 'comparison' | 'breakdown' | null;
 	let maximizedChart = $state<ChartId>(null);
@@ -63,9 +76,14 @@
 			<CalculatorForm bind:inputs />
 		</section>
 
-		<!-- Results SECOND -->
+		<!-- TDS settings -->
+		<section class="animate-fade-up mb-6 max-w-full sm:mb-8">
+			<TdsPanel bind:inputs={tdsInputs} result={tdsResult} />
+		</section>
+
+		<!-- Results -->
 		<section class="mb-6 max-w-full sm:mb-8">
-			<HeroMetrics {result} />
+			<HeroMetrics {result} {tdsResult} />
 		</section>
 
 		<!-- Charts -->
@@ -100,7 +118,7 @@
 			class="animate-fade-up max-w-full rounded-3xl border border-slate-200/60 bg-slate-50/60 p-5 backdrop-blur-sm sm:p-8"
 			style="animation-delay: 150ms"
 		>
-			<CalculationFlow {inputs} {result} />
+			<CalculationFlow {inputs} {result} {tdsResult} />
 		</section>
 
 		<footer class="mt-8 text-center text-xs text-slate-400">

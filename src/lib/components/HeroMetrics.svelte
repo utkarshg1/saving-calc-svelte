@@ -1,13 +1,17 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
 	import type { SavingsResult } from '$lib/calculations/savings';
+	import type { TdsResult } from '$lib/calculations/tds';
 	import { formatINR, formatPercent } from '$lib/utils/format';
 
 	interface Props {
 		result: SavingsResult;
+		tdsResult?: TdsResult;
 	}
 
-	let { result }: Props = $props();
+	let { result, tdsResult }: Props = $props();
+
+	const showNetMaturity = $derived(tdsResult?.tdsApplicable ?? false);
 
 	const metrics = $derived([
 		{
@@ -19,9 +23,13 @@
 		},
 		{
 			id: 'maturity',
-			label: 'Maturity Amount',
-			value: formatINR(result.rdMaturity),
-			subtitle: 'RD final value',
+			label: showNetMaturity ? 'Net Maturity (after TDS)' : 'Maturity Amount',
+			value: formatINR(
+				showNetMaturity ? tdsResult!.netMaturityAfterTds : result.rdMaturity
+			),
+			subtitle: showNetMaturity
+				? `Gross: ${formatINR(result.rdMaturity)} · TDS: ${formatINR(tdsResult!.tdsDeducted)}`
+				: 'RD final value',
 			accent: 'bento-glow-teal'
 		},
 		{
