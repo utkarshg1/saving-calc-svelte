@@ -184,7 +184,7 @@
 			}}
 		>
 			<span class="h-2 w-2 rounded-full bg-indigo-500"></span>
-			<span class="text-slate-600">{formatPercent(principalPct, 0)} principal</span>
+			<span class="text-slate-600">{formatPercent(principalPct, 1)} principal</span>
 		</button>
 		<button
 			type="button"
@@ -199,7 +199,7 @@
 		>
 			<span class="h-2 w-2 rounded-full bg-teal-500"></span>
 			<span class="text-slate-600">
-				{formatPercent(interestPct, 0)} {tdsApplies ? 'net int.' : 'interest'}
+				{formatPercent(interestPct, 1)} {tdsApplies ? 'net int.' : 'interest'}
 			</span>
 		</button>
 		{#if tdsApplies}
@@ -215,7 +215,7 @@
 				}}
 			>
 				<span class="h-2 w-2 rounded-full bg-rose-500"></span>
-				<span class="text-slate-600">{formatPercent(tdsPct, 0)} TDS</span>
+				<span class="text-slate-600">{formatPercent(tdsPct, 1)} TDS</span>
 			</button>
 		{/if}
 	</div>
