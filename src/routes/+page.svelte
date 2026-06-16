@@ -33,18 +33,24 @@
 	type ChartId = 'growth' | 'comparison' | 'breakdown' | null;
 	let maximizedChart = $state<ChartId>(null);
 
+	const tdsApplies = $derived(tdsResult.tdsApplicable);
+
 	const comparisonItems = $derived([
 		{ label: 'Target', value: inputs.targetAmount, color: '#94a3b8' },
 		{ label: 'Infl. Adj.', value: result.inflationAdjusted, color: '#8b5cf6' },
 		{ label: 'Estimated', value: result.estimatedAmount, color: '#6366f1' },
-		{ label: 'Maturity', value: result.rdMaturity, color: '#0d9488' }
+		{
+			label: tdsApplies ? 'Net Mat.' : 'Maturity',
+			value: tdsApplies ? tdsResult.netMaturityAfterTds : result.rdMaturity,
+			color: '#0d9488'
+		}
 	]);
 
-	const chartTitles: Record<Exclude<ChartId, null>, string> = {
-		growth: 'Savings Growth Over Time',
-		comparison: 'Amount Comparison',
-		breakdown: 'Principal vs Interest'
-	};
+	const chartTitles = $derived<Record<Exclude<ChartId, null>, string>>({
+		growth: tdsApplies ? 'Savings Growth (Net after TDS)' : 'Savings Growth Over Time',
+		comparison: tdsApplies ? 'Amount Comparison (Net Maturity)' : 'Amount Comparison',
+		breakdown: tdsApplies ? 'Principal, Net Interest & TDS' : 'Principal vs Interest'
+	});
 </script>
 
 <div class="relative min-h-dvh max-w-full overflow-x-hidden">
@@ -90,15 +96,15 @@
 		<section class="mb-8 grid max-w-full grid-cols-1 items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
 			<ChartCard
 				title="Growth"
-				description="Principal vs RD balance"
+				description={tdsApplies ? 'Principal vs net balance after TDS' : 'Principal vs RD balance'}
 				onmaximize={() => (maximizedChart = 'growth')}
 			>
-				<GrowthChart data={result.monthlySeries} />
+				<GrowthChart data={result.monthlySeries} {tdsResult} />
 			</ChartCard>
 
 			<ChartCard
 				title="Comparison"
-				description="Target to maturity"
+				description={tdsApplies ? 'Target to net maturity' : 'Target to maturity'}
 				onmaximize={() => (maximizedChart = 'comparison')}
 			>
 				<ComparisonChart items={comparisonItems} />
@@ -106,10 +112,14 @@
 
 			<ChartCard
 				title="Breakdown"
-				description="Principal vs interest"
+				description={tdsApplies ? 'Principal, net interest & TDS' : 'Principal vs interest'}
 				onmaximize={() => (maximizedChart = 'breakdown')}
 			>
-				<BreakdownChart principal={result.principalSaved} interest={result.interestEarned} />
+				<BreakdownChart
+					principal={result.principalSaved}
+					interest={result.interestEarned}
+					{tdsResult}
+				/>
 			</ChartCard>
 		</section>
 
@@ -134,13 +144,14 @@
 		onclose={() => (maximizedChart = null)}
 	>
 		{#if maximizedChart === 'growth'}
-			<GrowthChart data={result.monthlySeries} large={true} />
+			<GrowthChart data={result.monthlySeries} {tdsResult} large={true} />
 		{:else if maximizedChart === 'comparison'}
 			<ComparisonChart items={comparisonItems} large={true} />
 		{:else if maximizedChart === 'breakdown'}
 			<BreakdownChart
 				principal={result.principalSaved}
 				interest={result.interestEarned}
+				{tdsResult}
 				large={true}
 			/>
 		{/if}

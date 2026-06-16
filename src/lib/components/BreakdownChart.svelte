@@ -1,23 +1,36 @@
 <script lang="ts">
+	import type { TdsResult } from '$lib/calculations/tds';
 	import { formatINR, formatPercent } from '$lib/utils/format';
 	import ChartTooltip from './ChartTooltip.svelte';
 
 	interface Props {
 		principal: number;
 		interest: number;
+		tdsResult?: TdsResult;
 		large?: boolean;
 	}
 
-	let { principal, interest, large = false }: Props = $props();
+	let { principal, interest, tdsResult, large = false }: Props = $props();
 
-	let hovered: 'principal' | 'interest' | null = $state(null);
-	let pinned: 'principal' | 'interest' | null = $state(null);
+	type Segment = 'principal' | 'interest' | 'tds';
+
+	let hovered: Segment | null = $state(null);
+	let pinned: Segment | null = $state(null);
 
 	const active = $derived(pinned ?? hovered);
+	const tdsApplies = $derived(tdsResult?.tdsApplicable ?? false);
 
-	const total = $derived(principal + interest);
-	const principalPct = $derived(total > 0 ? (principal / total) * 100 : 0);
-	const interestPct = $derived(total > 0 ? (interest / total) * 100 : 0);
+	const netInterest = $derived(
+		tdsApplies && tdsResult ? tdsResult.netInterestAfterTds : interest
+	);
+	const tdsAmount = $derived(tdsApplies && tdsResult ? tdsResult.tdsDeducted : 0);
+	const grossTotal = $derived(principal + interest);
+	const netTotal = $derived(
+		tdsApplies && tdsResult ? tdsResult.netMaturityAfterTds : grossTotal
+	);
+	const principalPct = $derived(grossTotal > 0 ? (principal / grossTotal) * 100 : 0);
+	const interestPct = $derived(grossTotal > 0 ? (netInterest / grossTotal) * 100 : 0);
+	const tdsPct = $derived(grossTotal > 0 ? (tdsAmount / grossTotal) * 100 : 0);
 
 	const VB = 160;
 	const cx = VB / 2;
@@ -46,11 +59,24 @@
 		return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
 	}
 
-	function selectSegment(segment: 'principal' | 'interest') {
+	function selectSegment(segment: Segment) {
 		pinned = pinned === segment ? null : segment;
 	}
 
+	function dimmed(segment: Segment): boolean {
+		return active !== null && active !== segment;
+	}
+
 	const principalEnd = $derived((principalPct / 100) * 360);
+	const interestEnd = $derived(principalEnd + (interestPct / 100) * 360);
+
+	const tooltipTitle = $derived(
+		active === 'principal' ? 'Principal' : active === 'interest' ? 'Net Interest' : active === 'tds' ? 'TDS' : undefined
+	);
+
+	const tooltipXPercent = $derived(
+		active === 'principal' ? 28 : active === 'interest' ? 55 : active === 'tds' ? 78 : 50
+	);
 
 	const tooltipLines = $derived(
 		active === 'principal'
@@ -60,10 +86,18 @@
 				]
 			: active === 'interest'
 				? [
-						{ text: formatINR(interest), color: '#0d9488' },
-						{ text: formatPercent(interestPct, 1) + ' of total', color: '#64748b' }
+						{ text: formatINR(netInterest), color: '#0d9488' },
+						{ text: formatPercent(interestPct, 1) + ' of total', color: '#64748b' },
+						...(tdsApplies
+							? [{ text: `Gross interest: ${formatINR(interest)}`, color: '#94a3b8' }]
+							: [])
 					]
-				: []
+				: active === 'tds'
+					? [
+							{ text: formatINR(tdsAmount), color: '#e11d48' },
+							{ text: formatPercent(tdsPct, 1) + ' of gross', color: '#64748b' }
+						]
+					: []
 	);
 </script>
 
@@ -78,8 +112,8 @@
 	>
 		<ChartTooltip
 			visible={active !== null}
-			title={active === 'principal' ? 'Principal' : active === 'interest' ? 'Interest' : undefined}
-			xPercent={active === 'principal' ? 35 : active === 'interest' ? 65 : 50}
+			title={tooltipTitle}
+			xPercent={tooltipXPercent}
 			lines={tooltipLines}
 		/>
 
@@ -93,7 +127,7 @@
 			<path
 				d={arcPath(0, principalEnd, radius, innerRadius)}
 				fill="#4f46e5"
-				opacity={active === 'interest' ? 0.35 : 1}
+				opacity={dimmed('principal') ? 0.35 : 1}
 				role="presentation"
 				onmouseenter={() => (hovered = 'principal')}
 				onmouseleave={() => (hovered = null)}
@@ -103,9 +137,9 @@
 				}}
 			/>
 			<path
-				d={arcPath(principalEnd, 360, radius, innerRadius)}
+				d={arcPath(principalEnd, interestEnd, radius, innerRadius)}
 				fill="#0d9488"
-				opacity={active === 'principal' ? 0.35 : 1}
+				opacity={dimmed('interest') ? 0.35 : 1}
 				role="presentation"
 				onmouseenter={() => (hovered = 'interest')}
 				onmouseleave={() => (hovered = null)}
@@ -114,11 +148,25 @@
 					selectSegment('interest');
 				}}
 			/>
+			{#if tdsApplies}
+				<path
+					d={arcPath(interestEnd, 360, radius, innerRadius)}
+					fill="#e11d48"
+					opacity={dimmed('tds') ? 0.35 : 1}
+					role="presentation"
+					onmouseenter={() => (hovered = 'tds')}
+					onmouseleave={() => (hovered = null)}
+					onclick={(e) => {
+						e.stopPropagation();
+						selectSegment('tds');
+					}}
+				/>
+			{/if}
 			<text x={cx} y={cy - 4} text-anchor="middle" fill="#334155" font-size="11" font-weight="600">
-				Total
+				{tdsApplies ? 'Net Total' : 'Total'}
 			</text>
 			<text x={cx} y={cy + 10} text-anchor="middle" fill="#64748b" font-size="7">
-				{formatINR(total)}
+				{formatINR(netTotal)}
 			</text>
 		</svg>
 	</div>
@@ -150,7 +198,25 @@
 			}}
 		>
 			<span class="h-2 w-2 rounded-full bg-teal-500"></span>
-			<span class="text-slate-600">{formatPercent(interestPct, 0)} interest</span>
+			<span class="text-slate-600">
+				{formatPercent(interestPct, 0)} {tdsApplies ? 'net int.' : 'interest'}
+			</span>
 		</button>
+		{#if tdsApplies}
+			<button
+				type="button"
+				class="flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] transition
+					{active === 'tds' ? 'border-rose-200 bg-rose-50' : 'border-slate-100 bg-slate-50'}"
+				onmouseenter={() => (hovered = 'tds')}
+				onmouseleave={() => (hovered = null)}
+				onclick={(e) => {
+					e.stopPropagation();
+					selectSegment('tds');
+				}}
+			>
+				<span class="h-2 w-2 rounded-full bg-rose-500"></span>
+				<span class="text-slate-600">{formatPercent(tdsPct, 0)} TDS</span>
+			</button>
+		{/if}
 	</div>
 </div>
