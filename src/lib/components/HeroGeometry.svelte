@@ -1,3 +1,7 @@
+<script lang="ts">
+	import HeroHexCollide from './HeroHexCollide.svelte';
+</script>
+
 <div class="geo-hero pointer-events-none absolute inset-0 overflow-hidden rounded-3xl" aria-hidden="true">
 	<svg class="absolute inset-0 h-full w-full" viewBox="0 0 1200 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
 		<defs>
@@ -15,7 +19,8 @@
 		<circle cx="1000" cy="50" r="38" fill="none" stroke="#4f46e5" stroke-width="0.5" opacity="0.2" />
 	</svg>
 
+	<HeroHexCollide />
+
 	<div class="geo-ring geo-ring-1 absolute top-2 right-4 h-24 w-24 rounded-full border border-teal-300/25 sm:right-8 sm:h-28 sm:w-28"></div>
 	<div class="geo-ring geo-ring-2 absolute bottom-4 left-4 h-16 w-16 rounded-full border border-indigo-300/20 sm:h-20 sm:w-20"></div>
-	<div class="geo-float absolute top-4 right-1/3 h-10 w-10 opacity-20 sm:h-12 sm:w-12"></div>
 </div>

@@ -96,10 +96,19 @@ body {
 	animation: geo-spin 32s linear infinite reverse;
 }
 
-.geo-float {
+.geo-hex {
 	clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-	background: linear-gradient(135deg, #4f46e5 0%, #0d9488 100%);
-	animation: geo-float 2.5s ease-in-out infinite;
+	will-change: transform;
+}
+
+.geo-hex-zone {
+	overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.geo-hex {
+		will-change: auto;
+	}
 }
 
 .logo-badge {
