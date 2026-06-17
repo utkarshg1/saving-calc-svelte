@@ -79,10 +79,24 @@
 					...baseSteps,
 					{
 						id: 9,
-						title: 'Net after TDS',
-						formula: `Gross − TDS (${formatPercent(tdsResult.tdsRate * 100, 0)} on interest)`,
+						title: 'TDS Deducted',
+						formula: `Interest × ${formatPercent(tdsResult.tdsRate * 100, 0)}`,
+						value: formatINR(tdsResult.tdsDeducted),
+						color: 'from-rose-500 to-rose-600'
+					},
+					{
+						id: 10,
+						title: 'Net Interest after TDS',
+						formula: 'Interest − TDS',
+						value: formatINR(tdsResult.netInterestAfterTds),
+						color: 'from-cyan-500 to-cyan-600'
+					},
+					{
+						id: 11,
+						title: 'Net Maturity after TDS',
+						formula: 'Gross − TDS',
 						value: formatINR(tdsResult.netMaturityAfterTds),
-						color: 'from-cyan-500 to-cyan-600',
+						color: 'from-teal-500 to-teal-600',
 						highlight: true
 					}
 				]

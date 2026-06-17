@@ -9,6 +9,7 @@
 	import ComparisonChart from '$lib/components/ComparisonChart.svelte';
 	import BreakdownChart from '$lib/components/BreakdownChart.svelte';
 	import TdsPanel from '$lib/components/TdsPanel.svelte';
+	import AppLogo from '$lib/components/AppLogo.svelte';
 	import {
 		calculateSavings,
 		DEFAULT_INPUTS,
@@ -61,16 +62,21 @@
 		<!-- Compact hero -->
 		<header class="relative mb-5 max-w-full overflow-hidden rounded-3xl border border-slate-200/50 bg-white/70 p-5 backdrop-blur-md sm:mb-6 sm:p-6">
 			<HeroGeometry />
-			<div class="relative z-10">
-				<p class="text-[10px] font-bold tracking-[0.2em] text-teal-600 uppercase sm:text-xs">
-					FD-Backed Savings Planner
-				</p>
-				<h1 class="font-display mt-2 text-3xl font-bold leading-snug tracking-normal text-slate-900 sm:text-4xl">
-					Purchase Savings Calculator
-				</h1>
-				<p class="mt-2 max-w-lg text-sm leading-relaxed text-slate-500">
-					Inflation-adjusted targets, FD loan coverage, and quarterly RD compounding.
-				</p>
+			<div class="relative z-10 flex items-start gap-3 sm:gap-5">
+				<div class="animate-fade-up shrink-0">
+					<AppLogo framed size="md" />
+				</div>
+				<div class="min-w-0">
+					<p class="text-[10px] font-bold tracking-[0.2em] text-teal-600 uppercase sm:text-xs">
+						FD-Backed Savings Planner
+					</p>
+					<h1 class="font-display mt-2 text-3xl font-bold leading-snug tracking-normal text-slate-900 sm:text-4xl">
+						Purchase Savings Calculator
+					</h1>
+					<p class="mt-2 max-w-lg text-sm leading-relaxed text-slate-500">
+						Inflation-adjusted targets, FD loan coverage, and quarterly RD compounding.
+					</p>
+				</div>
 			</div>
 		</header>
 

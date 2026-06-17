@@ -8,11 +8,11 @@ A SvelteKit savings planner that helps you figure out how much to invest monthly
 - **FD loan coverage** — accounts for borrowing against your fixed deposit (default 85% loan ratio)
 - **Monthly RD planning** — calculates exact and rounded-up monthly deposit amounts (nearest ₹1,000)
 - **Quarterly compounding** — RD maturity uses `n = years × 4`, `i = rate ÷ 400`
-- **Live KPI cards** — monthly investment, maturity amount, interest earned, effective compounding
+- **Live KPI cards** — monthly investment, maturity, interest, compounding; plus TDS deducted and net interest when tax applies
 - **TDS calculation** — Section 194A net maturity after tax (₹40k/₹50k threshold, 10%/20% rate, Form 15G/15H)
 - **Interactive charts** — growth over time, amount comparison, principal vs interest breakdown
 - **Maximizable charts** — expand any chart to fullscreen with tooltips on hover or tap
-- **Calculation flowchart** — vertical step-by-step explanation of the full formula chain
+- **Calculation flowchart** — vertical step-by-step explanation including TDS deducted, net interest, and net maturity when applicable
 - **Mobile-friendly** — responsive layout with no horizontal scrolling
 
 ## Tech Stack

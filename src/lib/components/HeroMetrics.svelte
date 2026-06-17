@@ -11,42 +11,90 @@
 
 	let { result, tdsResult }: Props = $props();
 
-	const showNetMaturity = $derived(tdsResult?.tdsApplicable ?? false);
+	const tdsApplies = $derived(tdsResult?.tdsApplicable ?? false);
 
-	const metrics = $derived([
-		{
+	const metrics = $derived.by(() => {
+		const monthly = {
 			id: 'monthly',
 			label: 'Monthly Investment',
 			value: formatINR(result.roundedMonthly),
 			subtitle: 'Rounded to nearest ₹1,000',
 			accent: 'bento-glow-amber'
-		},
-		{
-			id: 'maturity',
-			label: showNetMaturity ? 'Net Maturity (after TDS)' : 'Maturity Amount',
-			value: formatINR(
-				showNetMaturity ? tdsResult!.netMaturityAfterTds : result.rdMaturity
-			),
-			subtitle: showNetMaturity
-				? `Gross: ${formatINR(result.rdMaturity)} · TDS: ${formatINR(tdsResult!.tdsDeducted)}`
-				: 'RD final value',
-			accent: 'bento-glow-teal'
-		},
-		{
+		};
+
+		const principal = {
+			id: 'principal',
+			label: 'Principal Saved',
+			value: formatINR(result.principalSaved),
+			subtitle: `${result.monthlySeries.length} monthly deposits`,
+			accent: 'bento-glow-violet'
+		};
+
+		const maturityBlock = tdsApplies
+			? [
+					{
+						id: 'gross-maturity',
+						label: 'Gross Maturity (before TDS)',
+						value: formatINR(result.rdMaturity),
+						subtitle: 'RD value before tax',
+						accent: 'bento-glow-sky'
+					},
+					{
+						id: 'net-maturity',
+						label: 'Net Maturity (after TDS)',
+						value: formatINR(tdsResult!.netMaturityAfterTds),
+						subtitle: 'After Section 194A TDS',
+						accent: 'bento-glow-teal'
+					}
+				]
+			: [
+					{
+						id: 'maturity',
+						label: 'Maturity Amount',
+						value: formatINR(result.rdMaturity),
+						subtitle: 'RD final value',
+						accent: 'bento-glow-teal'
+					}
+				];
+
+		const interest = {
 			id: 'interest',
 			label: 'Interest Earned',
 			value: formatINR(result.interestEarned),
 			subtitle: formatPercent(result.percentageInterest) + ' of principal',
 			accent: 'bento-glow-emerald'
-		},
-		{
+		};
+
+		const tdsBlock =
+			tdsApplies && tdsResult
+				? [
+						{
+							id: 'tds',
+							label: 'TDS Deducted',
+							value: formatINR(tdsResult.tdsDeducted),
+							subtitle: `${formatPercent(tdsResult.tdsRate * 100, 0)} on interest (Sec. 194A)`,
+							accent: 'bento-glow-rose'
+						},
+						{
+							id: 'net-interest',
+							label: 'Net Interest after TDS',
+							value: formatINR(tdsResult.netInterestAfterTds),
+							subtitle: `Gross: ${formatINR(result.interestEarned)}`,
+							accent: 'bento-glow-cyan'
+						}
+					]
+				: [];
+
+		const compound = {
 			id: 'compound',
 			label: 'Effective Compounding',
 			value: formatPercent(result.compoundedEstimate),
 			subtitle: 'Annual return estimate',
 			accent: 'bento-glow-indigo'
-		}
-	]);
+		};
+
+		return [monthly, principal, ...maturityBlock, interest, ...tdsBlock, compound];
+	});
 </script>
 
 <div class="hero-metrics grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
