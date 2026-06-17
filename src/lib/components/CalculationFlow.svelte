@@ -8,9 +8,11 @@
 		inputs: SavingsInputs;
 		result: SavingsResult;
 		tdsResult?: TdsResult;
+		/** PDF layout — no animations, tighter spacing */
+		compact?: boolean;
 	}
 
-	let { inputs, result, tdsResult }: Props = $props();
+	let { inputs, result, tdsResult, compact = false }: Props = $props();
 
 	const baseSteps = $derived([
 		{
@@ -104,56 +106,79 @@
 	);
 </script>
 
+{#snippet stepRow(step: (typeof steps)[number], i: number)}
+	<div class="flex min-w-0 gap-3 sm:gap-4">
+		<div class="flex shrink-0 flex-col items-center">
+			<div
+				class="flex {compact
+					? 'h-8 w-8 text-xs'
+					: 'h-10 w-10 text-sm'} items-center justify-center rounded-full bg-gradient-to-br {step.color} font-bold text-white shadow-lg"
+			>
+				{step.id}
+			</div>
+			{#if i < steps.length - 1}
+				<div class="flow-connector my-1 {compact ? 'min-h-[1.25rem]' : 'min-h-[2rem]'} w-0.5 flex-1"></div>
+			{/if}
+		</div>
+
+		<div
+			class="{compact ? 'mb-2 p-2.5' : 'mb-4 p-3 sm:p-4'} min-w-0 flex-1 overflow-hidden rounded-xl border transition-all duration-300
+				{compact ? '' : 'hover:shadow-md'}
+				{step.highlight
+				? 'border-amber-200 bg-amber-50/80'
+				: 'border-slate-200/80 bg-white'}"
+		>
+			<div class="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
+				<div class="min-w-0">
+					<h3 class="{compact ? 'text-sm' : ''} font-medium text-slate-800">{step.title}</h3>
+					<p class="font-mono-num mt-0.5 break-words text-xs text-slate-400">{step.formula}</p>
+				</div>
+				{#if compact}
+					<p class="font-mono-num shrink-0 text-sm font-semibold text-slate-800">
+						{step.value}
+					</p>
+				{:else}
+					{#key step.value}
+						<p
+							in:fly={{ y: 6, duration: 250 }}
+							class="font-mono-num shrink-0 text-base font-semibold text-slate-800 sm:text-lg"
+						>
+							{step.value}
+						</p>
+					{/key}
+				{/if}
+			</div>
+		</div>
+	</div>
+{/snippet}
+
 <div class="flow-container w-full max-w-full overflow-hidden">
-	<div class="mb-6">
-		<h2 class="font-display text-xl font-semibold text-slate-800 sm:text-2xl">How It Works</h2>
-		<p class="mt-1 text-sm text-slate-500">
-			Step-by-step from your target to RD maturity with quarterly compounding
-		</p>
+	<div class="{compact ? 'mb-4' : 'mb-6'}">
+		<h2 class="font-display {compact ? 'text-lg' : 'text-xl sm:text-2xl'} font-semibold text-slate-800">
+			How It Works
+		</h2>
+		{#if !compact}
+			<p class="mt-1 text-sm text-slate-500">
+				Step-by-step from your target to RD maturity with quarterly compounding
+			</p>
+		{/if}
 	</div>
 
 	<div class="relative space-y-0">
 		{#each steps as step, i (step.id)}
-			<div
-				class="flow-step animate-fade-up"
-				style="animation-delay: {i * 80}ms"
-				in:fly={{ x: -20, duration: 400, delay: i * 60 }}
-			>
-				<div class="flex min-w-0 gap-3 sm:gap-4">
-					<div class="flex shrink-0 flex-col items-center">
-						<div
-							class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br {step.color} text-sm font-bold text-white shadow-lg"
-						>
-							{step.id}
-						</div>
-						{#if i < steps.length - 1}
-							<div class="flow-connector my-1 min-h-[2rem] w-0.5 flex-1"></div>
-						{/if}
-					</div>
-
-					<div
-						class="mb-4 min-w-0 flex-1 overflow-hidden rounded-xl border p-3 transition-all duration-300 hover:shadow-md sm:p-4
-							{step.highlight
-							? 'border-amber-200 bg-amber-50/80'
-							: 'border-slate-200/80 bg-white'}"
-					>
-						<div class="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
-							<div class="min-w-0">
-								<h3 class="font-medium text-slate-800">{step.title}</h3>
-								<p class="font-mono-num mt-0.5 break-words text-xs text-slate-400">{step.formula}</p>
-							</div>
-							{#key step.value}
-								<p
-									in:fly={{ y: 6, duration: 250 }}
-									class="font-mono-num shrink-0 text-base font-semibold text-slate-800 sm:text-lg"
-								>
-									{step.value}
-								</p>
-							{/key}
-						</div>
-					</div>
+			{#if compact}
+				<div class="pdf-flow-step flow-step">
+					{@render stepRow(step, i)}
 				</div>
-			</div>
+			{:else}
+				<div
+					class="flow-step animate-fade-up"
+					style="animation-delay: {i * 80}ms"
+					in:fly={{ x: -20, duration: 400, delay: i * 60 }}
+				>
+					{@render stepRow(step, i)}
+				</div>
+			{/if}
 		{/each}
 	</div>
 

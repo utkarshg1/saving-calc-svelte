@@ -10,6 +10,7 @@
 	import BreakdownChart from '$lib/components/BreakdownChart.svelte';
 	import TdsPanel from '$lib/components/TdsPanel.svelte';
 	import AppLogo from '$lib/components/AppLogo.svelte';
+	import { openPrintReport } from '$lib/pdf/generatePdf';
 	import {
 		calculateSavings,
 		DEFAULT_INPUTS,
@@ -33,6 +34,16 @@
 
 	type ChartId = 'growth' | 'comparison' | 'breakdown' | null;
 	let maximizedChart = $state<ChartId>(null);
+	let pdfError = $state<string | null>(null);
+
+	async function exportPdf() {
+		pdfError = null;
+		try {
+			await openPrintReport(inputs, tdsInputs);
+		} catch (err) {
+			pdfError = err instanceof Error ? err.message : 'Failed to open PDF export';
+		}
+	}
 
 	const tdsApplies = $derived(tdsResult.tdsApplicable);
 
@@ -95,6 +106,31 @@
 
 		<!-- Results -->
 		<section class="mb-6 max-w-full sm:mb-8">
+			<div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+				<div>
+					<h2 class="font-display text-lg font-semibold text-slate-800">Key Results</h2>
+					<p class="mt-1 text-xs text-slate-400">
+						In the print dialog, set destination to Save as PDF.
+					</p>
+				</div>
+				<button
+					type="button"
+					class="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700 focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:outline-none"
+					onclick={exportPdf}
+					title="Opens print dialog — choose Save as PDF"
+				>
+					<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+						<path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" stroke-linecap="round" stroke-linejoin="round" />
+						<path d="M6 14h12v8H6z" stroke-linecap="round" stroke-linejoin="round" />
+					</svg>
+					Export PDF Report
+				</button>
+			</div>
+			{#if pdfError}
+				<p class="mb-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700" role="alert">
+					{pdfError}
+				</p>
+			{/if}
 			<HeroMetrics {result} {tdsResult} />
 		</section>
 

@@ -7,11 +7,24 @@
 	interface Props {
 		result: SavingsResult;
 		tdsResult?: TdsResult;
+		/** Print/PDF layout — no animations, pdf-kpi classes */
+		pdf?: boolean;
 	}
 
-	let { result, tdsResult }: Props = $props();
+	let { result, tdsResult, pdf = false }: Props = $props();
 
 	const tdsApplies = $derived(tdsResult?.tdsApplicable ?? false);
+
+	const PDF_LABELS: Record<string, string> = {
+		'Gross Maturity (before TDS)': 'Gross Maturity',
+		'Net Maturity (after TDS)': 'Net Maturity',
+		'Net Interest after TDS': 'Net Interest',
+		'Effective Compounding': 'Eff. Compounding'
+	};
+
+	function metricLabel(label: string): string {
+		return pdf ? (PDF_LABELS[label] ?? label) : label;
+	}
 
 	const metrics = $derived.by(() => {
 		const monthly = {
@@ -97,25 +110,40 @@
 	});
 </script>
 
-<div class="hero-metrics grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+<div
+	class="{pdf
+		? 'pdf-kpi-grid'
+		: 'hero-metrics grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4'}"
+>
 	{#each metrics as metric, i (metric.id)}
 		<div
-			class="hero-kpi group relative min-w-0 overflow-hidden rounded-2xl border border-white/60 bg-white/90 p-3 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-5
-				{metric.accent}"
-			style="animation-delay: {i * 80}ms"
+			class="{pdf
+				? `pdf-kpi pdf-kpi-card ${metric.accent}`
+				: `hero-kpi group relative min-w-0 overflow-hidden rounded-2xl border border-white/60 bg-white/90 p-3 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-5 ${metric.accent}`}"
+			style={pdf ? undefined : `animation-delay: ${i * 80}ms`}
 		>
-			<p class="text-[10px] font-semibold tracking-widest text-slate-400 uppercase sm:text-xs">
-				{metric.label}
+			<p
+				class="{pdf
+					? 'pdf-kpi-label'
+					: 'text-[10px] font-semibold tracking-widest text-slate-400 uppercase sm:text-xs'}"
+			>
+				{metricLabel(metric.label)}
 			</p>
-			{#key metric.value}
-				<p
-					in:fly={{ y: 10, duration: 350 }}
-					class="font-mono-num mt-1.5 text-base font-bold tracking-tight break-words text-slate-900 sm:mt-2 sm:text-xl lg:text-2xl"
-				>
-					{metric.value}
-				</p>
-			{/key}
-			<p class="mt-1 text-[10px] text-slate-400 sm:text-xs">{metric.subtitle}</p>
+			{#if pdf}
+				<p class="pdf-kpi-value">{metric.value}</p>
+			{:else}
+				{#key metric.value}
+					<p
+						in:fly={{ y: 10, duration: 350 }}
+						class="font-mono-num mt-1.5 text-base font-bold tracking-tight break-words text-slate-900 sm:mt-2 sm:text-xl lg:text-2xl"
+					>
+						{metric.value}
+					</p>
+				{/key}
+			{/if}
+			<p class="{pdf ? 'pdf-kpi-sub' : 'mt-1 text-[10px] text-slate-400 sm:text-xs'}">
+				{metric.subtitle}
+			</p>
 		</div>
 	{/each}
 </div>

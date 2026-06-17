@@ -8,9 +8,10 @@
 		interest: number;
 		tdsResult?: TdsResult;
 		large?: boolean;
+		static?: boolean;
 	}
 
-	let { principal, interest, tdsResult, large = false }: Props = $props();
+	let { principal, interest, tdsResult, large = false, static: isStatic = false }: Props = $props();
 
 	type Segment = 'principal' | 'interest' | 'tds';
 
@@ -104,18 +105,20 @@
 <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
 <div
 	class="flex h-full w-full flex-col items-center justify-center"
-	onclick={() => (pinned = null)}
+	onclick={isStatic ? undefined : () => (pinned = null)}
 	role="presentation"
 >
 	<div
 		class="chart-svg-area relative flex w-full items-center justify-center {large ? 'h-full max-w-none' : 'max-w-[180px] flex-1'}"
 	>
-		<ChartTooltip
-			visible={active !== null}
-			title={tooltipTitle}
-			xPercent={tooltipXPercent}
-			lines={tooltipLines}
-		/>
+		{#if !isStatic}
+			<ChartTooltip
+				visible={active !== null}
+				title={tooltipTitle}
+				xPercent={tooltipXPercent}
+				lines={tooltipLines}
+			/>
+		{/if}
 
 		<svg
 			viewBox="0 0 {VB} {VB}"
@@ -127,39 +130,45 @@
 			<path
 				d={arcPath(0, principalEnd, radius, innerRadius)}
 				fill="#4f46e5"
-				opacity={dimmed('principal') ? 0.35 : 1}
+				opacity={isStatic || !dimmed('principal') ? 1 : 0.35}
 				role="presentation"
-				onmouseenter={() => (hovered = 'principal')}
-				onmouseleave={() => (hovered = null)}
-				onclick={(e) => {
-					e.stopPropagation();
-					selectSegment('principal');
-				}}
+				onmouseenter={isStatic ? undefined : () => (hovered = 'principal')}
+				onmouseleave={isStatic ? undefined : () => (hovered = null)}
+				onclick={isStatic
+					? undefined
+					: (e) => {
+							e.stopPropagation();
+							selectSegment('principal');
+						}}
 			/>
 			<path
 				d={arcPath(principalEnd, interestEnd, radius, innerRadius)}
 				fill="#0d9488"
-				opacity={dimmed('interest') ? 0.35 : 1}
+				opacity={isStatic || !dimmed('interest') ? 1 : 0.35}
 				role="presentation"
-				onmouseenter={() => (hovered = 'interest')}
-				onmouseleave={() => (hovered = null)}
-				onclick={(e) => {
-					e.stopPropagation();
-					selectSegment('interest');
-				}}
+				onmouseenter={isStatic ? undefined : () => (hovered = 'interest')}
+				onmouseleave={isStatic ? undefined : () => (hovered = null)}
+				onclick={isStatic
+					? undefined
+					: (e) => {
+							e.stopPropagation();
+							selectSegment('interest');
+						}}
 			/>
 			{#if tdsApplies}
 				<path
 					d={arcPath(interestEnd, 360, radius, innerRadius)}
 					fill="#e11d48"
-					opacity={dimmed('tds') ? 0.35 : 1}
+					opacity={isStatic || !dimmed('tds') ? 1 : 0.35}
 					role="presentation"
-					onmouseenter={() => (hovered = 'tds')}
-					onmouseleave={() => (hovered = null)}
-					onclick={(e) => {
-						e.stopPropagation();
-						selectSegment('tds');
-					}}
+					onmouseenter={isStatic ? undefined : () => (hovered = 'tds')}
+					onmouseleave={isStatic ? undefined : () => (hovered = null)}
+					onclick={isStatic
+						? undefined
+						: (e) => {
+								e.stopPropagation();
+								selectSegment('tds');
+							}}
 				/>
 			{/if}
 			<text x={cx} y={cy - 4} text-anchor="middle" fill="#334155" font-size="11" font-weight="600">
@@ -172,51 +181,70 @@
 	</div>
 
 	<div class="mt-2 flex w-full shrink-0 flex-wrap justify-center gap-2">
-		<button
-			type="button"
-			class="flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] transition
-				{active === 'principal' ? 'border-indigo-200 bg-indigo-50' : 'border-slate-100 bg-slate-50'}"
-			onmouseenter={() => (hovered = 'principal')}
-			onmouseleave={() => (hovered = null)}
-			onclick={(e) => {
-				e.stopPropagation();
-				selectSegment('principal');
-			}}
-		>
-			<span class="h-2 w-2 rounded-full bg-indigo-500"></span>
-			<span class="text-slate-600">{formatPercent(principalPct, 1)} principal</span>
-		</button>
-		<button
-			type="button"
-			class="flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] transition
-				{active === 'interest' ? 'border-teal-200 bg-teal-50' : 'border-slate-100 bg-slate-50'}"
-			onmouseenter={() => (hovered = 'interest')}
-			onmouseleave={() => (hovered = null)}
-			onclick={(e) => {
-				e.stopPropagation();
-				selectSegment('interest');
-			}}
-		>
-			<span class="h-2 w-2 rounded-full bg-teal-500"></span>
-			<span class="text-slate-600">
-				{formatPercent(interestPct, 1)} {tdsApplies ? 'net int.' : 'interest'}
+		{#if isStatic}
+			<span class="flex items-center gap-1.5 rounded-full border border-slate-100 bg-slate-50 px-2.5 py-1 text-[10px]">
+				<span class="h-2 w-2 rounded-full bg-indigo-500"></span>
+				<span class="text-slate-600">{formatPercent(principalPct, 1)} principal</span>
 			</span>
-		</button>
-		{#if tdsApplies}
+			<span class="flex items-center gap-1.5 rounded-full border border-slate-100 bg-slate-50 px-2.5 py-1 text-[10px]">
+				<span class="h-2 w-2 rounded-full bg-teal-500"></span>
+				<span class="text-slate-600">
+					{formatPercent(interestPct, 1)} {tdsApplies ? 'net int.' : 'interest'}
+				</span>
+			</span>
+			{#if tdsApplies}
+				<span class="flex items-center gap-1.5 rounded-full border border-slate-100 bg-slate-50 px-2.5 py-1 text-[10px]">
+					<span class="h-2 w-2 rounded-full bg-rose-500"></span>
+					<span class="text-slate-600">{formatPercent(tdsPct, 1)} TDS</span>
+				</span>
+			{/if}
+		{:else}
 			<button
 				type="button"
 				class="flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] transition
-					{active === 'tds' ? 'border-rose-200 bg-rose-50' : 'border-slate-100 bg-slate-50'}"
-				onmouseenter={() => (hovered = 'tds')}
+					{active === 'principal' ? 'border-indigo-200 bg-indigo-50' : 'border-slate-100 bg-slate-50'}"
+				onmouseenter={() => (hovered = 'principal')}
 				onmouseleave={() => (hovered = null)}
 				onclick={(e) => {
 					e.stopPropagation();
-					selectSegment('tds');
+					selectSegment('principal');
 				}}
 			>
-				<span class="h-2 w-2 rounded-full bg-rose-500"></span>
-				<span class="text-slate-600">{formatPercent(tdsPct, 1)} TDS</span>
+				<span class="h-2 w-2 rounded-full bg-indigo-500"></span>
+				<span class="text-slate-600">{formatPercent(principalPct, 1)} principal</span>
 			</button>
+			<button
+				type="button"
+				class="flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] transition
+					{active === 'interest' ? 'border-teal-200 bg-teal-50' : 'border-slate-100 bg-slate-50'}"
+				onmouseenter={() => (hovered = 'interest')}
+				onmouseleave={() => (hovered = null)}
+				onclick={(e) => {
+					e.stopPropagation();
+					selectSegment('interest');
+				}}
+			>
+				<span class="h-2 w-2 rounded-full bg-teal-500"></span>
+				<span class="text-slate-600">
+					{formatPercent(interestPct, 1)} {tdsApplies ? 'net int.' : 'interest'}
+				</span>
+			</button>
+			{#if tdsApplies}
+				<button
+					type="button"
+					class="flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] transition
+						{active === 'tds' ? 'border-rose-200 bg-rose-50' : 'border-slate-100 bg-slate-50'}"
+					onmouseenter={() => (hovered = 'tds')}
+					onmouseleave={() => (hovered = null)}
+					onclick={(e) => {
+						e.stopPropagation();
+						selectSegment('tds');
+					}}
+				>
+					<span class="h-2 w-2 rounded-full bg-rose-500"></span>
+					<span class="text-slate-600">{formatPercent(tdsPct, 1)} TDS</span>
+				</button>
+			{/if}
 		{/if}
 	</div>
 </div>

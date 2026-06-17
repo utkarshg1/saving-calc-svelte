@@ -8,9 +8,11 @@
 		data: MonthlyDataPoint[];
 		tdsResult?: TdsResult;
 		large?: boolean;
+		/** PDF/static export — no tooltips or interaction */
+		static?: boolean;
 	}
 
-	let { data, tdsResult, large = false }: Props = $props();
+	let { data, tdsResult, large = false, static: isStatic = false }: Props = $props();
 
 	const VB_W = 400;
 	const VB_H = 220;
@@ -80,9 +82,19 @@
 	}
 
 	const yTicks = $derived([0, 0.5, 1].map((t) => t * maxY));
-	const xLabels = $derived(
-		data.filter((_, i) => i === 0 || i === data.length - 1 || (i + 1) % 12 === 0)
-	);
+	const xLabels = $derived.by(() => {
+		const candidates = data.filter(
+			(point, i) => i === 0 || (i > 0 && point.year !== data[i - 1].year)
+		);
+		const last = data[data.length - 1];
+		if (last && candidates[candidates.length - 1]?.month !== last.month) {
+			const prev = candidates[candidates.length - 1];
+			if (!prev || last.year !== prev.year) {
+				candidates.push(last);
+			}
+		}
+		return candidates;
+	});
 
 	const tooltipLines = $derived.by(() => {
 		if (activeIndex === null) return [];
@@ -108,16 +120,18 @@
 <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
 <div
 	class="flex w-full flex-col {large ? 'h-full' : 'h-full min-h-0'}"
-	onclick={() => (pinnedIndex = null)}
+	onclick={isStatic ? undefined : () => (pinnedIndex = null)}
 	role="presentation"
 >
 	<div class="chart-svg-area relative min-h-0 {large ? 'h-full' : 'flex-1'}">
-		<ChartTooltip
-			visible={activeIndex !== null}
-			title={activeIndex !== null ? `Month ${data[activeIndex].month}` : undefined}
-			xPercent={activeIndex !== null ? xPercent(activeIndex) : 50}
-			lines={tooltipLines}
-		/>
+		{#if !isStatic}
+			<ChartTooltip
+				visible={activeIndex !== null}
+				title={activeIndex !== null ? `Month ${data[activeIndex].month}` : undefined}
+				xPercent={activeIndex !== null ? xPercent(activeIndex) : 50}
+				lines={tooltipLines}
+			/>
+		{/if}
 
 		<svg
 			viewBox="0 0 {VB_W} {VB_H}"
@@ -193,24 +207,26 @@
 				/>
 			{/if}
 
-			{#each data as point, i}
-				<rect
-					x={xPos(i) - chartWidth / data.length / 2}
-					y={padding.top}
-					width={chartWidth / data.length}
-					height={chartHeight}
-					fill="transparent"
-					role="presentation"
-					onmouseenter={() => (hoveredIndex = i)}
-					onmouseleave={clearHover}
-					onclick={(e) => {
-						e.stopPropagation();
-						selectIndex(i);
-					}}
-				/>
-			{/each}
+			{#if !isStatic}
+				{#each data as point, i}
+					<rect
+						x={xPos(i) - chartWidth / data.length / 2}
+						y={padding.top}
+						width={chartWidth / data.length}
+						height={chartHeight}
+						fill="transparent"
+						role="presentation"
+						onmouseenter={() => (hoveredIndex = i)}
+						onmouseleave={clearHover}
+						onclick={(e) => {
+							e.stopPropagation();
+							selectIndex(i);
+						}}
+					/>
+				{/each}
+			{/if}
 
-			{#if activeIndex !== null}
+			{#if !isStatic && activeIndex !== null}
 				{@const point = displayData[activeIndex]}
 				<line
 					x1={xPos(activeIndex)}

@@ -11,9 +11,10 @@
 	interface Props {
 		items: BarItem[];
 		large?: boolean;
+		static?: boolean;
 	}
 
-	let { items, large = false }: Props = $props();
+	let { items, large = false, static: isStatic = false }: Props = $props();
 
 	const VB_W = 320;
 	const VB_H = 200;
@@ -53,18 +54,20 @@
 <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
 <div
 	class="flex w-full flex-col {large ? 'h-full' : 'h-full min-h-0'}"
-	onclick={() => (pinnedIndex = null)}
+	onclick={isStatic ? undefined : () => (pinnedIndex = null)}
 	role="presentation"
 >
 	<div class="chart-svg-area relative min-h-0 {large ? 'h-full' : 'flex-1'}">
-		<ChartTooltip
-			visible={activeIndex !== null}
-			title={activeIndex !== null ? items[activeIndex].label : undefined}
-			xPercent={activeIndex !== null ? barCenterPercent(activeIndex) : 50}
-			lines={activeIndex !== null
-				? [{ text: formatINR(items[activeIndex].value), color: items[activeIndex].color }]
-				: []}
-		/>
+		{#if !isStatic}
+			<ChartTooltip
+				visible={activeIndex !== null}
+				title={activeIndex !== null ? items[activeIndex].label : undefined}
+				xPercent={activeIndex !== null ? barCenterPercent(activeIndex) : 50}
+				lines={activeIndex !== null
+					? [{ text: formatINR(items[activeIndex].value), color: items[activeIndex].color }]
+					: []}
+			/>
+		{/if}
 
 		<svg
 			viewBox="0 0 {VB_W} {VB_H}"
@@ -84,14 +87,16 @@
 					height={h}
 					rx="5"
 					fill={item.color}
-					opacity={activeIndex === null || activeIndex === i ? 1 : 0.35}
+					opacity={isStatic || activeIndex === null || activeIndex === i ? 1 : 0.35}
 					role="presentation"
-					onmouseenter={() => (hoveredIndex = i)}
-					onmouseleave={clearHover}
-					onclick={(e) => {
-						e.stopPropagation();
-						selectIndex(i);
-					}}
+					onmouseenter={isStatic ? undefined : () => (hoveredIndex = i)}
+					onmouseleave={isStatic ? undefined : clearHover}
+					onclick={isStatic
+						? undefined
+						: (e) => {
+								e.stopPropagation();
+								selectIndex(i);
+							}}
 				/>
 				<text
 					x={x + barWidth / 2}

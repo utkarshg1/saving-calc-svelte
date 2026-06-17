@@ -2,6 +2,8 @@
 
 A SvelteKit savings planner that helps you figure out how much to invest monthly via recurring deposits (RD) to reach a future purchase goal — adjusted for inflation, FD loan coverage, and quarterly compounding.
 
+**Version:** 1.3.0
+
 ## Features
 
 - **Inflation-adjusted targets** — projects your purchase amount forward using a configurable inflation rate
@@ -10,17 +12,20 @@ A SvelteKit savings planner that helps you figure out how much to invest monthly
 - **Quarterly compounding** — RD maturity uses `n = years × 4`, `i = rate ÷ 400`
 - **Live KPI cards** — monthly investment, maturity, interest, compounding; plus TDS deducted and net interest when tax applies
 - **TDS calculation** — Section 194A net maturity after tax (₹40k/₹50k threshold, 10%/20% rate, Form 15G/15H)
-- **Interactive charts** — growth over time, amount comparison, principal vs interest breakdown
+- **Interactive charts** — growth over time, amount comparison, principal vs interest breakdown (custom SVG)
 - **Maximizable charts** — expand any chart to fullscreen with tooltips on hover or tap
 - **Calculation flowchart** — vertical step-by-step explanation including TDS deducted, net interest, and net maturity when applicable
+- **PDF report export** — 3-page A4 report via browser print (Save as PDF); summary, charts, and calculation flow; no server-side PDF libraries
 - **Mobile-friendly** — responsive layout with no horizontal scrolling
 
 ## Tech Stack
 
-- [SvelteKit](https://kit.svelte.dev/) with TypeScript
+- [SvelteKit](https://kit.svelte.dev/) 2 + [Svelte](https://svelte.dev/) 5 with TypeScript
 - [Tailwind CSS](https://tailwindcss.com/) v4 (forms + typography plugins)
+- Custom SVG charts (no charting library)
+- PDF via `window.print()` and print CSS (no Playwright, html2pdf, or Chromium on the server)
+- [@sveltejs/adapter-vercel](https://svelte.dev/docs/kit/adapter-vercel) for deployment
 - [Prettier](https://prettier.io/) for formatting
-- Client-side only — no backend required
 
 ## Getting Started
 
@@ -30,6 +35,29 @@ npm run dev
 ```
 
 Open the URL shown in the terminal (typically `http://localhost:5173`).
+
+## PDF Export
+
+1. Click **Export PDF Report** on the calculator page.
+2. Report data is saved to `localStorage` and the app navigates to `/report?id=…` in the same tab (no pop-up required).
+3. The report page loads fonts, then opens the browser print dialog.
+4. Choose **Save as PDF** as the destination.
+
+The report is three A4 pages:
+
+1. Summary — inputs, TDS, and key results
+2. Visual analysis — growth, comparison, and breakdown charts (stacked vertically)
+3. Calculation flow — step-by-step breakdown with RD formula
+
+Report data is cleared from `localStorage` after printing.
+
+## Deployment
+
+```sh
+npm run build
+```
+
+Deploy to [Vercel](https://vercel.com/). The project uses `adapter-vercel` in `vite.config.ts`. No headless browser or server-side PDF generation is required.
 
 ## Default Inputs
 
@@ -80,11 +108,21 @@ At RD maturity, interest is subject to TDS even on direct RD → FD rollover:
 ```
 src/
 ├── lib/
-│   ├── calculations/savings.ts   # Core math engine
-│   ├── components/               # UI components and charts
-│   └── utils/format.ts           # INR and percent formatting
+│   ├── calculations/
+│   │   ├── savings.ts          # RD math, inflation, monthly series
+│   │   └── tds.ts              # Section 194A TDS logic
+│   ├── components/             # UI, charts (SVG), PdfReport
+│   ├── pdf/
+│   │   ├── buildReportPayload.ts
+│   │   ├── generatePdf.ts      # localStorage + navigate to /report
+│   │   └── pdf-report.css      # A4 print styles
+│   └── utils/format.ts         # INR and percent formatting
 └── routes/
-    ├── +page.svelte              # Main calculator page
-    ├── +layout.svelte            # App shell and fonts
-    └── layout.css                # Global theme and animations
+    ├── +page.svelte            # Main calculator + Export PDF button
+    ├── +layout.svelte          # App shell and fonts
+    ├── layout.css              # Global theme and animations
+    └── report/                 # Client-only print page (ssr: false)
+        ├── +page.svelte
+        ├── +page.ts
+        └── +layout.svelte
 ```
