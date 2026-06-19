@@ -39,7 +39,6 @@ export interface SavingsResult {
 	principalSaved: number;
 	gainsEarned: number;
 	percentageGains: number;
-	compoundedEstimate: number;
 	monthlySeries: MonthlyDataPoint[];
 	/** RD-specific */
 	quarterlyRate: number;
@@ -164,10 +163,6 @@ export function calculateSavings(inputs: SavingsInputs): SavingsResult {
 		const cgtResult = calculateSipCapitalGains(roundedMonthly, years, sipReturnRatePercent);
 		const gainsEarned = sip.maturity - principalSaved;
 		const percentageGains = principalSaved > 0 ? (gainsEarned / principalSaved) * 100 : 0;
-		const compoundedEstimate =
-			principalSaved > 0
-				? (Math.pow(sip.maturity / principalSaved, 1 / years) - 1) * 100
-				: 0;
 		const monthlySeries = buildSipMonthlySeries(roundedMonthly, years, sipReturnRatePercent);
 
 		return {
@@ -181,7 +176,6 @@ export function calculateSavings(inputs: SavingsInputs): SavingsResult {
 			principalSaved,
 			gainsEarned,
 			percentageGains,
-			compoundedEstimate,
 			monthlySeries,
 			quarterlyRate: 0,
 			quarters: 0,
@@ -201,8 +195,6 @@ export function calculateSavings(inputs: SavingsInputs): SavingsResult {
 	const rd = calculateRdMaturity(roundedMonthly, years, rdInterestRatePercent);
 	const interestEarned = rd.maturity - principalSaved;
 	const percentageInterest = principalSaved > 0 ? (interestEarned / principalSaved) * 100 : 0;
-	const compoundedEstimate =
-		principalSaved > 0 ? (Math.pow(rd.maturity / principalSaved, 1 / years) - 1) * 100 : 0;
 	const monthlySeries = buildMonthlySeries(roundedMonthly, years, rdInterestRatePercent);
 
 	return {
@@ -216,7 +208,6 @@ export function calculateSavings(inputs: SavingsInputs): SavingsResult {
 		principalSaved,
 		gainsEarned: interestEarned,
 		percentageGains: percentageInterest,
-		compoundedEstimate,
 		monthlySeries,
 		quarterlyRate: rd.quarterlyRate,
 		quarters: rd.quarters,

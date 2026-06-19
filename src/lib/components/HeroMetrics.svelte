@@ -9,11 +9,12 @@
 		result: SavingsResult;
 		tdsResult?: TdsResult;
 		cgtResult?: CapitalGainsResult | null;
+		xirrPercent?: number | null;
 		/** Print/PDF layout — no animations, pdf-kpi classes */
 		pdf?: boolean;
 	}
 
-	let { result, tdsResult, cgtResult = null, pdf = false }: Props = $props();
+	let { result, tdsResult, cgtResult = null, xirrPercent = null, pdf = false }: Props = $props();
 
 	const isSip = $derived(result.investmentPath === 'sip');
 	const tdsApplies = $derived(!isSip && (tdsResult?.tdsApplicable ?? false));
@@ -23,7 +24,6 @@
 		'Gross Maturity (before TDS)': 'Gross Maturity',
 		'Net Maturity (after TDS)': 'Net Maturity',
 		'Net Interest after TDS': 'Net Interest',
-		'Effective Compounding': 'Eff. Compounding',
 		'Gross SIP Value': 'Gross SIP',
 		'Net FD Principal': 'Net FD',
 		'Capital Gains Tax': 'CGT',
@@ -157,15 +157,15 @@
 					]
 				: [];
 
-		const compound = {
-			id: 'compound',
-			label: 'Effective Compounding',
-			value: formatPercent(result.compoundedEstimate),
-			subtitle: 'Annual return estimate',
+		const xirr = {
+			id: 'xirr',
+			label: 'XIRR',
+			value: xirrPercent !== null ? formatPercent(xirrPercent) : '—',
+			subtitle: 'Net after-tax annualized return',
 			accent: 'bento-glow-indigo'
 		};
 
-		return [monthly, principal, ...maturityBlock, gains, ...taxBlock, ...netGainsBlock, compound];
+		return [monthly, principal, ...maturityBlock, gains, ...taxBlock, ...netGainsBlock, xirr];
 	});
 </script>
 

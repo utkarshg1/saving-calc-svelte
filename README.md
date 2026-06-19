@@ -2,7 +2,7 @@
 
 A SvelteKit savings planner that helps you figure out how much to invest monthly to reach a future purchase goal — adjusted for inflation and FD loan coverage. Choose **RD** (quarterly compounding + TDS) or **SIP** (equity MF growth, capital gains tax, net FD principal).
 
-**Version:** 1.5.0
+**Version:** 1.6.0
 
 ## Features
 
@@ -13,11 +13,12 @@ A SvelteKit savings planner that helps you figure out how much to invest monthly
 - **RD path** — quarterly compounding: `n = years × 4`, `i = rate ÷ 400`
 - **SIP path** — monthly compounding at editable expected return (default 12% p.a.), full redemption with per-installment STCG/LTCG (FIFO), ₹1.25L LTCG exemption, net post-tax corpus as FD principal
 - **SIP return sensitivity** — ±3% scenario table (maturity, gains, tax, net gains, net FD) plus net capital gains after tax KPI
-- **Live KPI cards** — monthly investment, maturity, interest, compounding; plus TDS deducted and net interest when tax applies
+- **Live KPI cards** — monthly investment, maturity, gains, XIRR (annualized return on monthly deposits; net after-tax maturity as final inflow), plus TDS/CGT when tax applies
+- **Live input updates** — numeric fields update calculations instantly while typing (no blur or snap-to-zero while editing)
 - **TDS calculation** — Section 194A net maturity after tax (₹40k/₹50k threshold, 10%/20% rate, Form 15G/15H)
-- **Interactive charts** — growth over time, amount comparison, principal vs interest breakdown (custom SVG)
+- **Interactive charts** — growth over time, amount comparison, principal vs gains breakdown with CGT/TDS slice (custom SVG)
 - **Maximizable charts** — expand any chart to fullscreen with tooltips on hover or tap
-- **Calculation flowchart** — vertical step-by-step explanation including TDS deducted, net interest, and net maturity when applicable
+- **Calculation flowchart** — vertical step-by-step explanation; SIP path includes STCG, LTCG, Total CGT, and Net FD Principal (12 steps); RD path includes TDS steps when applicable
 - **PDF report export** — 3-page A4 report via browser print (Save as PDF); summary, charts, and calculation flow; no server-side PDF libraries
 - **Mobile-friendly** — responsive layout with no horizontal scrolling
 
@@ -86,11 +87,14 @@ Deploy to [Vercel](https://vercel.com/). The project uses `adapter-vercel` in `v
 
 4. **RD maturity** — `M = R × [((1 + i)^n − 1) / (1 − (1 + i)^(−1/3))]` where `n` = quarters, `i` = annual rate ÷ 400
 
-**SIP path (step 7+):**
+**SIP path (steps 7–12):**
 
-4. **SIP maturity** — `M = P × [((1 + i)^n − 1) / i] × (1 + i)` where `i = (1 + R)^(1/12) − 1`, `n` = months
-5. **Capital gains tax** — FIFO per installment: STCG @ 20% (≤12 mo), LTCG @ 12.5% above ₹1.25L exemption
-6. **Net FD principal** — gross SIP value minus STCG and LTCG tax
+7. **SIP maturity** — `M = P × [((1 + i)^n − 1) / i] × (1 + i)` where `i = (1 + R)^(1/12) − 1`, `n` = months
+8. **Capital gains** — gross SIP minus principal (FIFO per installment)
+9. **STCG tax** — ≤12 mo gains × 20%
+10. **LTCG tax** — >12 mo gains minus ₹1.25L exemption × 12.5%
+11. **Total CGT** — STCG tax + LTCG tax
+12. **Net FD principal** — gross SIP minus total CGT
 
 ## TDS (Section 194A)
 
@@ -126,6 +130,7 @@ src/
 │   │   ├── savings.ts          # Shared + RD/SIP branch logic
 │   │   ├── sip.ts              # SIP FV, monthly series, installment gains
 │   │   ├── capitalGains.ts     # STCG/LTCG tax with ₹1.25L exemption
+│   │   ├── xirr.ts             # XIRR (Newton-Raphson, monthly deposits)
 │   │   └── tds.ts              # Section 194A TDS logic
 │   ├── components/             # UI, charts (SVG), PdfReport
 │   ├── pdf/

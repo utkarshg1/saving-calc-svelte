@@ -2,6 +2,7 @@ import { calculateSavings, type SavingsInputs } from '$lib/calculations/savings'
 import { calculateTds, type TdsInputs, type TdsResult } from '$lib/calculations/tds';
 import type { CapitalGainsResult } from '$lib/calculations/capitalGains';
 import { buildSipSensitivityTable, type SipSensitivityRow } from '$lib/calculations/sip';
+import { calculateMonthlyInvestmentXirr } from '$lib/calculations/xirr';
 
 export interface ComparisonItem {
 	label: string;
@@ -17,6 +18,7 @@ export interface ReportPayload {
 	cgtResult: CapitalGainsResult | null;
 	comparisonItems: ComparisonItem[];
 	sipSensitivity: SipSensitivityRow[];
+	xirrPercent: number | null;
 	generatedAt: string;
 }
 
@@ -63,6 +65,12 @@ export function buildReportPayload(inputs: SavingsInputs, tdsInputs: TdsInputs):
 			)
 		: [];
 
+	const xirrPercent = calculateMonthlyInvestmentXirr(
+		result.roundedMonthly,
+		inputs.years,
+		netMaturity
+	);
+
 	return {
 		inputs,
 		tdsInputs,
@@ -71,6 +79,7 @@ export function buildReportPayload(inputs: SavingsInputs, tdsInputs: TdsInputs):
 		cgtResult,
 		comparisonItems,
 		sipSensitivity,
+		xirrPercent,
 		generatedAt: new Date().toISOString()
 	};
 }

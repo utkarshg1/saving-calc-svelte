@@ -59,6 +59,25 @@
 		return result;
 	}
 
+	function shouldSkipLiveCommit(trimmed: string): boolean {
+		if (trimmed === '' || trimmed === '.') return true;
+		if (/^0+$/.test(trimmed) && trimmed.length > 1) return true;
+		return false;
+	}
+
+	function tryLiveCommit(raw: string) {
+		const trimmed = raw.trim();
+		if (shouldSkipLiveCommit(trimmed)) return;
+
+		const parsed = parseFloat(trimmed);
+		if (!Number.isFinite(parsed) || parsed < 0) return;
+
+		const committed = clamp(parsed);
+		if (committed !== value) {
+			oncommit?.(committed);
+		}
+	}
+
 	function commit() {
 		const trimmed = draft.trim();
 		if (trimmed === '' || trimmed === '.') {
@@ -107,6 +126,7 @@
 		}}
 		oninput={(e) => {
 			draft = sanitize(e.currentTarget.value);
+			tryLiveCommit(draft);
 		}}
 		onblur={commit}
 		onkeydown={(e) => {

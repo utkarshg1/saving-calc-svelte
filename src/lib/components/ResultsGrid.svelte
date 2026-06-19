@@ -31,10 +31,4 @@
 		subtitle={formatPercent(result.percentageInterest) + ' of principal'}
 		delay={350}
 	/>
-	<ResultCard
-		label="Compounded Estimate"
-		value={formatPercent(result.compoundedEstimate)}
-		subtitle="Effective annual return"
-		delay={400}
-	/>
 </div>

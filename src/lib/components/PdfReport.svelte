@@ -28,6 +28,7 @@
 		cgtResult?: CapitalGainsResult | null;
 		comparisonItems: ComparisonItem[];
 		sipSensitivity?: SipSensitivityRow[];
+		xirrPercent?: number | null;
 		generatedAt?: Date;
 	}
 
@@ -39,6 +40,7 @@
 		cgtResult,
 		comparisonItems,
 		sipSensitivity = [],
+		xirrPercent = null,
 		generatedAt = new Date()
 	}: Props = $props();
 
@@ -238,7 +240,13 @@
 
 		<div class="pdf-card pdf-results-block">
 			<h2 class="pdf-card-title">Key Results</h2>
-			<HeroMetrics {result} tdsResult={tdsResult ?? undefined} cgtResult={cgtResult} pdf />
+			<HeroMetrics
+				{result}
+				tdsResult={tdsResult ?? undefined}
+				cgtResult={cgtResult}
+				{xirrPercent}
+				pdf
+			/>
 		</div>
 
 		{@render pageFooter()}

@@ -13,7 +13,7 @@
 
 	function deltaLabel(delta: number): string {
 		if (delta === 0) return 'base';
-		return delta > 0 ? `+${delta}` : `${delta}`;
+		return delta > 0 ? `+${delta}%` : `${delta}%`;
 	}
 </script>
 

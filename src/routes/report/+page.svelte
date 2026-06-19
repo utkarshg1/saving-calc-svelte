@@ -42,6 +42,7 @@
 			if (parsed.cgtResult === undefined) parsed.cgtResult = null;
 			if (parsed.tdsResult === undefined) parsed.tdsResult = null;
 			if (parsed.sipSensitivity === undefined) parsed.sipSensitivity = [];
+			if (parsed.xirrPercent === undefined) parsed.xirrPercent = null;
 			payload = parsed;
 
 			await tick();
@@ -97,6 +98,7 @@
 		tdsResult={payload.tdsResult}
 		cgtResult={payload.cgtResult}
 		sipSensitivity={payload.sipSensitivity}
+		xirrPercent={payload.xirrPercent}
 		comparisonItems={payload.comparisonItems}
 		generatedAt={new Date(payload.generatedAt)}
 	/>

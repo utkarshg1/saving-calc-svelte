@@ -21,6 +21,7 @@
 	} from '$lib/calculations/savings';
 	import { calculateTds, DEFAULT_TDS_INPUTS, type TdsInputs } from '$lib/calculations/tds';
 	import { buildSipSensitivityTable } from '$lib/calculations/sip';
+	import { calculateMonthlyInvestmentXirr } from '$lib/calculations/xirr';
 
 	let inputs = $state<SavingsInputs>({ ...DEFAULT_INPUTS });
 	let tdsInputs = $state<TdsInputs>({ ...DEFAULT_TDS_INPUTS });
@@ -70,6 +71,9 @@
 			: tdsApplies
 				? tdsResult!.netMaturityAfterTds
 				: result.grossMaturity
+	);
+	const xirrPercent = $derived(
+		calculateMonthlyInvestmentXirr(result.roundedMonthly, inputs.years, netMaturity)
 	);
 
 	const comparisonItems = $derived([
@@ -188,7 +192,7 @@
 					{pdfError}
 				</p>
 			{/if}
-			<HeroMetrics {result} {tdsResult} {cgtResult} />
+			<HeroMetrics {result} {tdsResult} {cgtResult} {xirrPercent} />
 		</section>
 
 		{#if isSip && sipSensitivity.length > 0}

@@ -35,7 +35,11 @@
 	const taxApplies = $derived(tdsApplies || cgtApplies);
 
 	const netInterest = $derived(
-		tdsApplies && tdsResult ? tdsResult.netInterestAfterTds : interest
+		tdsApplies && tdsResult
+			? tdsResult.netInterestAfterTds
+			: cgtApplies && cgtResult
+				? cgtResult.netCapitalGainsAfterTax
+				: interest
 	);
 	const taxAmount = $derived(
 		tdsApplies && tdsResult ? tdsResult.tdsDeducted : cgtApplies && cgtResult ? cgtResult.totalTax : 0
@@ -87,15 +91,23 @@
 		return active !== null && active !== segment;
 	}
 
+	const MIN_TAX_ARC_DEG = 6;
+
 	const principalEnd = $derived((principalPct / 100) * 360);
 	const interestEnd = $derived(principalEnd + (interestPct / 100) * 360);
+	const rawTaxArc = $derived(taxApplies ? (taxPct / 100) * 360 : 0);
+	const taxArcDegrees = $derived(
+		rawTaxArc > 0 && rawTaxArc < MIN_TAX_ARC_DEG ? MIN_TAX_ARC_DEG : rawTaxArc
+	);
+	const visualInterestEnd = $derived(taxApplies ? 360 - taxArcDegrees : interestEnd);
+	const taxArcEnd = $derived(taxApplies ? 360 : interestEnd);
 
 	const tooltipTitle = $derived(
 		active === 'principal'
 			? 'Principal'
 			: active === 'interest'
 				? cgtApplies
-					? 'Gains'
+					? 'Net Gains'
 					: 'Net Interest'
 				: active === 'tds'
 					? cgtApplies
@@ -120,7 +132,9 @@
 						{ text: formatPercent(interestPct, 1) + ' of total', color: '#64748b' },
 						...(tdsApplies
 							? [{ text: `Gross interest: ${formatINR(interest)}`, color: '#94a3b8' }]
-							: [])
+							: cgtApplies
+								? [{ text: `Gross gains: ${formatINR(interest)}`, color: '#94a3b8' }]
+								: [])
 					]
 				: active === 'tds'
 					? [
@@ -171,7 +185,7 @@
 						}}
 			/>
 			<path
-				d={arcPath(principalEnd, interestEnd, radius, innerRadius)}
+				d={arcPath(principalEnd, visualInterestEnd, radius, innerRadius)}
 				fill="#0d9488"
 				opacity={isStatic || !dimmed('interest') ? 1 : 0.35}
 				role="presentation"
@@ -186,7 +200,7 @@
 			/>
 			{#if taxApplies}
 				<path
-					d={arcPath(interestEnd, 360, radius, innerRadius)}
+					d={arcPath(visualInterestEnd, taxArcEnd, radius, innerRadius)}
 					fill="#e11d48"
 					opacity={isStatic || !dimmed('tds') ? 1 : 0.35}
 					role="presentation"

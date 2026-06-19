@@ -116,8 +116,15 @@
 					},
 					{
 						id: 11,
+						title: 'Total CGT',
+						formula: 'STCG tax + LTCG tax',
+						value: formatINR(cgtResult.totalTax),
+						color: 'from-red-500 to-red-600'
+					},
+					{
+						id: 12,
 						title: 'Net FD Principal',
-						formula: 'Gross SIP − STCG tax − LTCG tax',
+						formula: 'Gross SIP − Total CGT',
 						value: formatINR(cgtResult.netAfterTax),
 						color: 'from-teal-500 to-teal-600',
 						highlight: true
