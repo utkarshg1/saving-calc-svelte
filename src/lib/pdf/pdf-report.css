@@ -191,6 +191,29 @@
 	margin-bottom: 10px;
 }
 
+.pdf-sensitivity-block {
+	break-inside: avoid;
+	page-break-inside: avoid;
+	margin-bottom: 10px;
+}
+
+.pdf-sensitivity {
+	border: 1px solid rgba(226, 232, 240, 0.9);
+	border-radius: 12px;
+	padding: 10px;
+	background: #ffffff;
+}
+
+.pdf-sensitivity-table th,
+.pdf-sensitivity-table td {
+	padding: 4px 6px !important;
+	font-size: 9px !important;
+}
+
+.pdf-sensitivity-table th {
+	font-size: 8px !important;
+}
+
 .pdf-kpi-grid {
 	display: grid;
 	grid-template-columns: repeat(4, 1fr);

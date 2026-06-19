@@ -32,7 +32,17 @@
 				return;
 			}
 
-			payload = JSON.parse(raw) as ReportPayload;
+			const parsed = JSON.parse(raw) as ReportPayload;
+			if (!parsed.inputs.investmentPath) {
+				parsed.inputs.investmentPath = 'rd';
+			}
+			if (parsed.inputs.sipReturnRatePercent === undefined) {
+				parsed.inputs.sipReturnRatePercent = 12;
+			}
+			if (parsed.cgtResult === undefined) parsed.cgtResult = null;
+			if (parsed.tdsResult === undefined) parsed.tdsResult = null;
+			if (parsed.sipSensitivity === undefined) parsed.sipSensitivity = [];
+			payload = parsed;
 
 			await tick();
 			if (document.fonts?.ready) {
@@ -85,6 +95,8 @@
 		tdsInputs={payload.tdsInputs}
 		result={payload.result}
 		tdsResult={payload.tdsResult}
+		cgtResult={payload.cgtResult}
+		sipSensitivity={payload.sipSensitivity}
 		comparisonItems={payload.comparisonItems}
 		generatedAt={new Date(payload.generatedAt)}
 	/>

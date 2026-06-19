@@ -2,17 +2,22 @@
 	import { fly } from 'svelte/transition';
 	import type { SavingsInputs, SavingsResult } from '$lib/calculations/savings';
 	import type { TdsResult } from '$lib/calculations/tds';
+	import type { CapitalGainsResult } from '$lib/calculations/capitalGains';
 	import { formatINR, formatNumber, formatPercent } from '$lib/utils/format';
+	import { LTCG_EXEMPTION } from '$lib/calculations/capitalGains';
 
 	interface Props {
 		inputs: SavingsInputs;
 		result: SavingsResult;
 		tdsResult?: TdsResult;
+		cgtResult?: CapitalGainsResult | null;
 		/** PDF layout — no animations, tighter spacing */
 		compact?: boolean;
 	}
 
-	let { inputs, result, tdsResult, compact = false }: Props = $props();
+	let { inputs, result, tdsResult, cgtResult = null, compact = false }: Props = $props();
+
+	const isSip = $derived(inputs.investmentPath === 'sip');
 
 	const baseSteps = $derived([
 		{
@@ -57,7 +62,10 @@
 			value: formatINR(result.roundedMonthly),
 			color: 'from-rose-500 to-rose-600',
 			highlight: true
-		},
+		}
+	]);
+
+	const rdPathSteps = $derived([
 		{
 			id: 7,
 			title: 'RD Compounding',
@@ -75,10 +83,52 @@
 		}
 	]);
 
-	const steps = $derived(
+	const sipPathSteps = $derived(
+		cgtResult
+			? [
+					{
+						id: 7,
+						title: 'SIP Compounding',
+						formula: `M = P × [((1+i)^n − 1) / i] × (1+i), R=${inputs.sipReturnRatePercent}%`,
+						value: formatINR(result.sipMaturity),
+						color: 'from-teal-500 to-teal-600'
+					},
+					{
+						id: 8,
+						title: 'Capital Gains',
+						formula: 'Gross SIP − Principal (per installment FIFO)',
+						value: formatINR(cgtResult.totalGains),
+						color: 'from-emerald-500 to-emerald-600'
+					},
+					{
+						id: 9,
+						title: 'STCG Tax',
+						formula: `≤12 mo gains × 20% (${cgtResult.stcgInstallmentCount} installments)`,
+						value: formatINR(cgtResult.stcgTax),
+						color: 'from-rose-500 to-rose-600'
+					},
+					{
+						id: 10,
+						title: 'LTCG Tax',
+						formula: `>12 mo gains − ${formatINR(LTCG_EXEMPTION)} × 12.5%`,
+						value: formatINR(cgtResult.ltcgTax),
+						color: 'from-orange-500 to-orange-600'
+					},
+					{
+						id: 11,
+						title: 'Net FD Principal',
+						formula: 'Gross SIP − STCG tax − LTCG tax',
+						value: formatINR(cgtResult.netAfterTax),
+						color: 'from-teal-500 to-teal-600',
+						highlight: true
+					}
+				]
+			: []
+	);
+
+	const rdTdsSteps = $derived(
 		tdsResult?.tdsApplicable
 			? [
-					...baseSteps,
 					{
 						id: 9,
 						title: 'TDS Deducted',
@@ -102,7 +152,11 @@
 						highlight: true
 					}
 				]
-			: baseSteps
+			: []
+	);
+
+	const steps = $derived(
+		isSip ? [...baseSteps, ...sipPathSteps] : [...baseSteps, ...rdPathSteps, ...rdTdsSteps]
 	);
 </script>
 
@@ -159,7 +213,9 @@
 		</h2>
 		{#if !compact}
 			<p class="mt-1 text-sm text-slate-500">
-				Step-by-step from your target to RD maturity with quarterly compounding
+				{isSip
+					? 'Step-by-step from your target to SIP maturity, capital gains tax, and FD principal'
+					: 'Step-by-step from your target to RD maturity with quarterly compounding'}
 			</p>
 		{/if}
 	</div>
@@ -183,15 +239,27 @@
 	</div>
 
 	<div class="mx-auto mt-4 max-w-3xl rounded-xl border border-teal-100 bg-teal-50/50 p-4 text-center">
-		<p class="text-xs font-medium tracking-wide text-teal-700 uppercase">RD Formula</p>
-		<p class="font-mono-num mt-2 break-words text-sm text-teal-900">
-			M = R × [((1 + i)<sup>n</sup> − 1) / (1 − (1 + i)<sup>−1/3</sup>)]
-		</p>
-		<p class="font-mono-num mt-1 break-words text-xs text-teal-600">
-			R = {formatINR(result.roundedMonthly)}, n = {result.quarters} quarters, i = rate/400 = {formatNumber(
-				result.quarterlyRate,
-				4
-			)}
-		</p>
+		{#if isSip}
+			<p class="text-xs font-medium tracking-wide text-teal-700 uppercase">SIP Formula</p>
+			<p class="font-mono-num mt-2 break-words text-sm text-teal-900">
+				M = P × [((1 + i)<sup>n</sup> − 1) / i] × (1 + i)
+			</p>
+			<p class="font-mono-num mt-1 break-words text-xs text-teal-600">
+				P = {formatINR(result.roundedMonthly)}, n = {result.sipMonths} months, i = (1 + R)<sup
+					>1/12</sup
+				> − 1 = {formatNumber(result.monthlyRate, 6)}
+			</p>
+		{:else}
+			<p class="text-xs font-medium tracking-wide text-teal-700 uppercase">RD Formula</p>
+			<p class="font-mono-num mt-2 break-words text-sm text-teal-900">
+				M = R × [((1 + i)<sup>n</sup> − 1) / (1 − (1 + i)<sup>−1/3</sup>)]
+			</p>
+			<p class="font-mono-num mt-1 break-words text-xs text-teal-600">
+				R = {formatINR(result.roundedMonthly)}, n = {result.quarters} quarters, i = rate/400 = {formatNumber(
+					result.quarterlyRate,
+					4
+				)}
+			</p>
+		{/if}
 	</div>
 </div>

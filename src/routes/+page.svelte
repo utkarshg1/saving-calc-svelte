@@ -9,6 +9,9 @@
 	import ComparisonChart from '$lib/components/ComparisonChart.svelte';
 	import BreakdownChart from '$lib/components/BreakdownChart.svelte';
 	import TdsPanel from '$lib/components/TdsPanel.svelte';
+	import CgtPanel from '$lib/components/CgtPanel.svelte';
+	import SipSensitivityTable from '$lib/components/SipSensitivityTable.svelte';
+	import InvestmentPathToggle from '$lib/components/InvestmentPathToggle.svelte';
 	import AppLogo from '$lib/components/AppLogo.svelte';
 	import { openPrintReport } from '$lib/pdf/generatePdf';
 	import {
@@ -17,19 +20,33 @@
 		type SavingsInputs
 	} from '$lib/calculations/savings';
 	import { calculateTds, DEFAULT_TDS_INPUTS, type TdsInputs } from '$lib/calculations/tds';
+	import { buildSipSensitivityTable } from '$lib/calculations/sip';
 
 	let inputs = $state<SavingsInputs>({ ...DEFAULT_INPUTS });
 	let tdsInputs = $state<TdsInputs>({ ...DEFAULT_TDS_INPUTS });
 	let result = $derived(calculateSavings(inputs));
+	let isSip = $derived(inputs.investmentPath === 'sip');
+	let cgtResult = $derived(result.cgtResult);
+	let sipSensitivity = $derived(
+		isSip
+			? buildSipSensitivityTable(
+					result.roundedMonthly,
+					inputs.years,
+					inputs.sipReturnRatePercent
+				)
+			: []
+	);
 	let tdsResult = $derived(
-		calculateTds({
-			totalInterest: result.interestEarned,
-			grossMaturity: result.rdMaturity,
-			otherInterestThisFY: tdsInputs.otherInterestThisFY,
-			isSeniorCitizen: tdsInputs.isSeniorCitizen,
-			hasPAN: tdsInputs.hasPAN,
-			form15GHSubmitted: tdsInputs.form15GHSubmitted
-		})
+		isSip
+			? undefined
+			: calculateTds({
+					totalInterest: result.gainsEarned,
+					grossMaturity: result.grossMaturity,
+					otherInterestThisFY: tdsInputs.otherInterestThisFY,
+					isSeniorCitizen: tdsInputs.isSeniorCitizen,
+					hasPAN: tdsInputs.hasPAN,
+					form15GHSubmitted: tdsInputs.form15GHSubmitted
+				})
 	);
 
 	type ChartId = 'growth' | 'comparison' | 'breakdown' | null;
@@ -45,23 +62,49 @@
 		}
 	}
 
-	const tdsApplies = $derived(tdsResult.tdsApplicable);
+	const tdsApplies = $derived(tdsResult?.tdsApplicable ?? false);
+	const cgtApplies = $derived(isSip && cgtResult !== null && cgtResult.totalTax > 0);
+	const netMaturity = $derived(
+		isSip
+			? cgtResult?.netAfterTax ?? result.grossMaturity
+			: tdsApplies
+				? tdsResult!.netMaturityAfterTds
+				: result.grossMaturity
+	);
 
 	const comparisonItems = $derived([
 		{ label: 'Target', value: inputs.targetAmount, color: '#94a3b8' },
 		{ label: 'Infl. Adj.', value: result.inflationAdjusted, color: '#8b5cf6' },
 		{ label: 'Estimated', value: result.estimatedAmount, color: '#6366f1' },
 		{
-			label: tdsApplies ? 'Net Mat.' : 'Maturity',
-			value: tdsApplies ? tdsResult.netMaturityAfterTds : result.rdMaturity,
+			label: isSip ? (cgtApplies ? 'Net FD' : 'SIP Mat.') : tdsApplies ? 'Net Mat.' : 'Maturity',
+			value: netMaturity,
 			color: '#0d9488'
 		}
 	]);
 
 	const chartTitles = $derived<Record<Exclude<ChartId, null>, string>>({
-		growth: tdsApplies ? 'Savings Growth (Net after TDS)' : 'Savings Growth Over Time',
-		comparison: tdsApplies ? 'Amount Comparison (Net Maturity)' : 'Amount Comparison',
-		breakdown: tdsApplies ? 'Principal, Net Interest & TDS' : 'Principal vs Interest'
+		growth: isSip
+			? cgtApplies
+				? 'Savings Growth (Net after CGT)'
+				: 'SIP Growth Over Time'
+			: tdsApplies
+				? 'Savings Growth (Net after TDS)'
+				: 'Savings Growth Over Time',
+		comparison: isSip
+			? cgtApplies
+				? 'Amount Comparison (Net FD)'
+				: 'Amount Comparison (SIP)'
+			: tdsApplies
+				? 'Amount Comparison (Net Maturity)'
+				: 'Amount Comparison',
+		breakdown: isSip
+			? cgtApplies
+				? 'Principal, Gains & CGT'
+				: 'Principal vs Gains'
+			: tdsApplies
+				? 'Principal, Net Interest & TDS'
+				: 'Principal vs Interest'
 	});
 </script>
 
@@ -85,13 +128,23 @@
 						Purchase Savings Calculator
 					</h1>
 					<p class="mt-2 max-w-lg text-sm leading-relaxed text-slate-500">
-						Inflation-adjusted targets, FD loan coverage, and quarterly RD compounding.
+						Inflation-adjusted targets, FD loan coverage, RD or SIP investment paths.
 					</p>
 				</div>
 			</div>
 		</header>
 
-		<!-- Inputs FIRST -->
+		<!-- Path toggle at top -->
+		<section class="animate-fade-up mb-6 max-w-full sm:mb-8">
+			<InvestmentPathToggle
+				path={inputs.investmentPath}
+				onchange={(path) => {
+					inputs = { ...inputs, investmentPath: path };
+				}}
+			/>
+		</section>
+
+		<!-- Inputs -->
 		<section
 			class="animate-fade-up mb-6 max-w-full rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:mb-8 sm:p-6"
 		>
@@ -99,9 +152,13 @@
 			<CalculatorForm bind:inputs />
 		</section>
 
-		<!-- TDS settings -->
+		<!-- Tax panel -->
 		<section class="animate-fade-up mb-6 max-w-full sm:mb-8">
-			<TdsPanel bind:inputs={tdsInputs} result={tdsResult} />
+			{#if isSip && cgtResult}
+				<CgtPanel result={cgtResult} />
+			{:else if tdsResult}
+				<TdsPanel bind:inputs={tdsInputs} result={tdsResult} />
+			{/if}
 		</section>
 
 		<!-- Results -->
@@ -131,22 +188,31 @@
 					{pdfError}
 				</p>
 			{/if}
-			<HeroMetrics {result} {tdsResult} />
+			<HeroMetrics {result} {tdsResult} {cgtResult} />
 		</section>
+
+		{#if isSip && sipSensitivity.length > 0}
+			<section class="animate-fade-up mb-6 max-w-full sm:mb-8">
+				<SipSensitivityTable
+					rows={sipSensitivity}
+					baseReturnPercent={inputs.sipReturnRatePercent}
+				/>
+			</section>
+		{/if}
 
 		<!-- Charts -->
 		<section class="mb-8 grid max-w-full grid-cols-1 items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
 			<ChartCard
 				title="Growth"
-				description={tdsApplies ? 'Principal vs net balance after TDS' : 'Principal vs RD balance'}
+				description={chartTitles.growth}
 				onmaximize={() => (maximizedChart = 'growth')}
 			>
-				<GrowthChart data={result.monthlySeries} {tdsResult} />
+				<GrowthChart data={result.monthlySeries} {tdsResult} {cgtResult} />
 			</ChartCard>
 
 			<ChartCard
 				title="Comparison"
-				description={tdsApplies ? 'Target to net maturity' : 'Target to maturity'}
+				description={chartTitles.comparison}
 				onmaximize={() => (maximizedChart = 'comparison')}
 			>
 				<ComparisonChart items={comparisonItems} />
@@ -154,13 +220,15 @@
 
 			<ChartCard
 				title="Breakdown"
-				description={tdsApplies ? 'Principal, net interest & TDS' : 'Principal vs interest'}
+				description={chartTitles.breakdown}
 				onmaximize={() => (maximizedChart = 'breakdown')}
 			>
 				<BreakdownChart
 					principal={result.principalSaved}
-					interest={result.interestEarned}
+					interest={result.gainsEarned}
 					{tdsResult}
+					{cgtResult}
+					gainsLabel="gains"
 				/>
 			</ChartCard>
 		</section>
@@ -170,11 +238,13 @@
 			class="animate-fade-up max-w-full rounded-3xl border border-slate-200/60 bg-slate-50/60 p-5 backdrop-blur-sm sm:p-8"
 			style="animation-delay: 150ms"
 		>
-			<CalculationFlow {inputs} {result} {tdsResult} />
+			<CalculationFlow {inputs} {result} {tdsResult} {cgtResult} />
 		</section>
 
 		<footer class="mt-8 text-center text-xs text-slate-400">
-			Quarterly RD compounding — n = years × 4, i = rate ÷ 400
+			{isSip
+				? 'SIP monthly compounding — i = (1 + R)^(1/12) − 1'
+				: 'Quarterly RD compounding — n = years × 4, i = rate ÷ 400'}
 		</footer>
 	</div>
 </div>
@@ -186,14 +256,16 @@
 		onclose={() => (maximizedChart = null)}
 	>
 		{#if maximizedChart === 'growth'}
-			<GrowthChart data={result.monthlySeries} {tdsResult} large={true} />
+			<GrowthChart data={result.monthlySeries} {tdsResult} {cgtResult} large={true} />
 		{:else if maximizedChart === 'comparison'}
 			<ComparisonChart items={comparisonItems} large={true} />
 		{:else if maximizedChart === 'breakdown'}
 			<BreakdownChart
 				principal={result.principalSaved}
-				interest={result.interestEarned}
+				interest={result.gainsEarned}
 				{tdsResult}
+				{cgtResult}
+				gainsLabel="gains"
 				large={true}
 			/>
 		{/if}

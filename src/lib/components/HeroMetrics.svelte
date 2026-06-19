@@ -2,24 +2,32 @@
 	import { fly } from 'svelte/transition';
 	import type { SavingsResult } from '$lib/calculations/savings';
 	import type { TdsResult } from '$lib/calculations/tds';
+	import type { CapitalGainsResult } from '$lib/calculations/capitalGains';
 	import { formatINR, formatPercent } from '$lib/utils/format';
 
 	interface Props {
 		result: SavingsResult;
 		tdsResult?: TdsResult;
+		cgtResult?: CapitalGainsResult | null;
 		/** Print/PDF layout — no animations, pdf-kpi classes */
 		pdf?: boolean;
 	}
 
-	let { result, tdsResult, pdf = false }: Props = $props();
+	let { result, tdsResult, cgtResult = null, pdf = false }: Props = $props();
 
-	const tdsApplies = $derived(tdsResult?.tdsApplicable ?? false);
+	const isSip = $derived(result.investmentPath === 'sip');
+	const tdsApplies = $derived(!isSip && (tdsResult?.tdsApplicable ?? false));
+	const cgtApplies = $derived(isSip && cgtResult !== null && cgtResult.totalTax > 0);
 
 	const PDF_LABELS: Record<string, string> = {
 		'Gross Maturity (before TDS)': 'Gross Maturity',
 		'Net Maturity (after TDS)': 'Net Maturity',
 		'Net Interest after TDS': 'Net Interest',
-		'Effective Compounding': 'Eff. Compounding'
+		'Effective Compounding': 'Eff. Compounding',
+		'Gross SIP Value': 'Gross SIP',
+		'Net FD Principal': 'Net FD',
+		'Capital Gains Tax': 'CGT',
+		'Net Capital Gains After Tax': 'Net Gains'
 	};
 
 	function metricLabel(label: string): string {
@@ -43,43 +51,81 @@
 			accent: 'bento-glow-violet'
 		};
 
-		const maturityBlock = tdsApplies
-			? [
-					{
-						id: 'gross-maturity',
-						label: 'Gross Maturity (before TDS)',
-						value: formatINR(result.rdMaturity),
-						subtitle: 'RD value before tax',
-						accent: 'bento-glow-sky'
-					},
-					{
-						id: 'net-maturity',
-						label: 'Net Maturity (after TDS)',
-						value: formatINR(tdsResult!.netMaturityAfterTds),
-						subtitle: 'After Section 194A TDS',
-						accent: 'bento-glow-teal'
-					}
-				]
-			: [
-					{
-						id: 'maturity',
-						label: 'Maturity Amount',
-						value: formatINR(result.rdMaturity),
-						subtitle: 'RD final value',
-						accent: 'bento-glow-teal'
-					}
-				];
+		const maturityBlock = isSip
+			? cgtResult
+				? [
+						{
+							id: 'gross-maturity',
+							label: 'Gross SIP Value',
+							value: formatINR(result.grossMaturity),
+							subtitle: 'Before capital gains tax',
+							accent: 'bento-glow-sky'
+						},
+						{
+							id: 'net-maturity',
+							label: 'Net FD Principal',
+							value: formatINR(cgtResult.netAfterTax),
+							subtitle: 'After STCG / LTCG on redemption',
+							accent: 'bento-glow-teal'
+						}
+					]
+				: [
+						{
+							id: 'maturity',
+							label: 'SIP Maturity',
+							value: formatINR(result.grossMaturity),
+							subtitle: 'Projected corpus at tenure end',
+							accent: 'bento-glow-teal'
+						}
+					]
+			: tdsApplies
+				? [
+						{
+							id: 'gross-maturity',
+							label: 'Gross Maturity (before TDS)',
+							value: formatINR(result.grossMaturity),
+							subtitle: 'RD value before tax',
+							accent: 'bento-glow-sky'
+						},
+						{
+							id: 'net-maturity',
+							label: 'Net Maturity (after TDS)',
+							value: formatINR(tdsResult!.netMaturityAfterTds),
+							subtitle: 'After Section 194A TDS',
+							accent: 'bento-glow-teal'
+						}
+					]
+				: [
+						{
+							id: 'maturity',
+							label: 'Maturity Amount',
+							value: formatINR(result.grossMaturity),
+							subtitle: 'RD final value',
+							accent: 'bento-glow-teal'
+						}
+					];
 
-		const interest = {
-			id: 'interest',
-			label: 'Interest Earned',
-			value: formatINR(result.interestEarned),
-			subtitle: formatPercent(result.percentageInterest) + ' of principal',
+		const gains = {
+			id: 'gains',
+			label: isSip ? 'Capital Gains' : 'Interest Earned',
+			value: formatINR(result.gainsEarned),
+			subtitle: formatPercent(result.percentageGains) + ' of principal',
 			accent: 'bento-glow-emerald'
 		};
 
-		const tdsBlock =
-			tdsApplies && tdsResult
+		const taxBlock = isSip
+			? cgtResult && cgtResult.totalTax > 0
+				? [
+						{
+							id: 'cgt',
+							label: 'Capital Gains Tax',
+							value: formatINR(cgtResult.totalTax),
+							subtitle: `STCG ${formatINR(cgtResult.stcgTax)} + LTCG ${formatINR(cgtResult.ltcgTax)}`,
+							accent: 'bento-glow-rose'
+						}
+					]
+				: []
+			: tdsApplies && tdsResult
 				? [
 						{
 							id: 'tds',
@@ -92,7 +138,20 @@
 							id: 'net-interest',
 							label: 'Net Interest after TDS',
 							value: formatINR(tdsResult.netInterestAfterTds),
-							subtitle: `Gross: ${formatINR(result.interestEarned)}`,
+							subtitle: `Gross: ${formatINR(result.gainsEarned)}`,
+							accent: 'bento-glow-cyan'
+						}
+					]
+				: [];
+
+		const netGainsBlock =
+			isSip && cgtResult
+				? [
+						{
+							id: 'net-gains',
+							label: 'Net Capital Gains After Tax',
+							value: formatINR(cgtResult.netCapitalGainsAfterTax),
+							subtitle: 'Gross gains − STCG/LTCG tax',
 							accent: 'bento-glow-cyan'
 						}
 					]
@@ -106,7 +165,7 @@
 			accent: 'bento-glow-indigo'
 		};
 
-		return [monthly, principal, ...maturityBlock, interest, ...tdsBlock, compound];
+		return [monthly, principal, ...maturityBlock, gains, ...taxBlock, ...netGainsBlock, compound];
 	});
 </script>
 

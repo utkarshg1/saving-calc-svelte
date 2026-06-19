@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { TdsResult } from '$lib/calculations/tds';
+	import type { CapitalGainsResult } from '$lib/calculations/capitalGains';
 	import { formatINR, formatPercent } from '$lib/utils/format';
 	import ChartTooltip from './ChartTooltip.svelte';
 
@@ -7,11 +8,21 @@
 		principal: number;
 		interest: number;
 		tdsResult?: TdsResult;
+		cgtResult?: CapitalGainsResult | null;
+		gainsLabel?: string;
 		large?: boolean;
 		static?: boolean;
 	}
 
-	let { principal, interest, tdsResult, large = false, static: isStatic = false }: Props = $props();
+	let {
+		principal,
+		interest,
+		tdsResult,
+		cgtResult = null,
+		gainsLabel = 'interest',
+		large = false,
+		static: isStatic = false
+	}: Props = $props();
 
 	type Segment = 'principal' | 'interest' | 'tds';
 
@@ -20,18 +31,26 @@
 
 	const active = $derived(pinned ?? hovered);
 	const tdsApplies = $derived(tdsResult?.tdsApplicable ?? false);
+	const cgtApplies = $derived(cgtResult !== null && cgtResult.totalTax > 0);
+	const taxApplies = $derived(tdsApplies || cgtApplies);
 
 	const netInterest = $derived(
 		tdsApplies && tdsResult ? tdsResult.netInterestAfterTds : interest
 	);
-	const tdsAmount = $derived(tdsApplies && tdsResult ? tdsResult.tdsDeducted : 0);
+	const taxAmount = $derived(
+		tdsApplies && tdsResult ? tdsResult.tdsDeducted : cgtApplies && cgtResult ? cgtResult.totalTax : 0
+	);
 	const grossTotal = $derived(principal + interest);
 	const netTotal = $derived(
-		tdsApplies && tdsResult ? tdsResult.netMaturityAfterTds : grossTotal
+		tdsApplies && tdsResult
+			? tdsResult.netMaturityAfterTds
+			: cgtApplies && cgtResult
+				? cgtResult.netAfterTax
+				: grossTotal
 	);
 	const principalPct = $derived(grossTotal > 0 ? (principal / grossTotal) * 100 : 0);
 	const interestPct = $derived(grossTotal > 0 ? (netInterest / grossTotal) * 100 : 0);
-	const tdsPct = $derived(grossTotal > 0 ? (tdsAmount / grossTotal) * 100 : 0);
+	const taxPct = $derived(grossTotal > 0 ? (taxAmount / grossTotal) * 100 : 0);
 
 	const VB = 160;
 	const cx = VB / 2;
@@ -72,7 +91,17 @@
 	const interestEnd = $derived(principalEnd + (interestPct / 100) * 360);
 
 	const tooltipTitle = $derived(
-		active === 'principal' ? 'Principal' : active === 'interest' ? 'Net Interest' : active === 'tds' ? 'TDS' : undefined
+		active === 'principal'
+			? 'Principal'
+			: active === 'interest'
+				? cgtApplies
+					? 'Gains'
+					: 'Net Interest'
+				: active === 'tds'
+					? cgtApplies
+						? 'CGT'
+						: 'TDS'
+					: undefined
 	);
 
 	const tooltipXPercent = $derived(
@@ -95,8 +124,8 @@
 					]
 				: active === 'tds'
 					? [
-							{ text: formatINR(tdsAmount), color: '#e11d48' },
-							{ text: formatPercent(tdsPct, 1) + ' of gross', color: '#64748b' }
+							{ text: formatINR(taxAmount), color: '#e11d48' },
+							{ text: formatPercent(taxPct, 1) + ' of gross', color: '#64748b' }
 						]
 					: []
 	);
@@ -155,7 +184,7 @@
 							selectSegment('interest');
 						}}
 			/>
-			{#if tdsApplies}
+			{#if taxApplies}
 				<path
 					d={arcPath(interestEnd, 360, radius, innerRadius)}
 					fill="#e11d48"
@@ -172,7 +201,7 @@
 				/>
 			{/if}
 			<text x={cx} y={cy - 4} text-anchor="middle" fill="#334155" font-size="11" font-weight="600">
-				{tdsApplies ? 'Net Total' : 'Total'}
+				{taxApplies ? 'Net Total' : 'Total'}
 			</text>
 			<text x={cx} y={cy + 10} text-anchor="middle" fill="#64748b" font-size="7">
 				{formatINR(netTotal)}
@@ -189,13 +218,13 @@
 			<span class="flex items-center gap-1.5 rounded-full border border-slate-100 bg-slate-50 px-2.5 py-1 text-[10px]">
 				<span class="h-2 w-2 rounded-full bg-teal-500"></span>
 				<span class="text-slate-600">
-					{formatPercent(interestPct, 1)} {tdsApplies ? 'net int.' : 'interest'}
+					{formatPercent(interestPct, 1)} {cgtApplies ? gainsLabel : tdsApplies ? 'net int.' : 'interest'}
 				</span>
 			</span>
-			{#if tdsApplies}
+			{#if taxApplies}
 				<span class="flex items-center gap-1.5 rounded-full border border-slate-100 bg-slate-50 px-2.5 py-1 text-[10px]">
 					<span class="h-2 w-2 rounded-full bg-rose-500"></span>
-					<span class="text-slate-600">{formatPercent(tdsPct, 1)} TDS</span>
+					<span class="text-slate-600">{formatPercent(taxPct, 1)} {cgtApplies ? 'CGT' : 'TDS'}</span>
 				</span>
 			{/if}
 		{:else}
@@ -226,10 +255,10 @@
 			>
 				<span class="h-2 w-2 rounded-full bg-teal-500"></span>
 				<span class="text-slate-600">
-					{formatPercent(interestPct, 1)} {tdsApplies ? 'net int.' : 'interest'}
+					{formatPercent(interestPct, 1)} {cgtApplies ? gainsLabel : tdsApplies ? 'net int.' : 'interest'}
 				</span>
 			</button>
-			{#if tdsApplies}
+			{#if taxApplies}
 				<button
 					type="button"
 					class="flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] transition
@@ -242,7 +271,7 @@
 					}}
 				>
 					<span class="h-2 w-2 rounded-full bg-rose-500"></span>
-					<span class="text-slate-600">{formatPercent(tdsPct, 1)} TDS</span>
+					<span class="text-slate-600">{formatPercent(taxPct, 1)} {cgtApplies ? 'CGT' : 'TDS'}</span>
 				</button>
 			{/if}
 		{/if}

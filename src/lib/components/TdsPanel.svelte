@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { TdsInputs, TdsResult } from '$lib/calculations/tds';
 	import { formatINR, formatPercent } from '$lib/utils/format';
+	import NumericInput from './NumericInput.svelte';
 
 	interface Props {
 		inputs: TdsInputs;
@@ -50,18 +51,16 @@
 			<label for="other-interest" class="mb-1.5 block text-sm font-medium text-slate-700">
 				Other FD/RD interest this financial year
 			</label>
-			<div class="relative">
-				<span class="absolute top-1/2 left-3 -translate-y-1/2 text-sm text-slate-400">₹</span>
-				<input
-					id="other-interest"
-					type="number"
-					inputmode="decimal"
-					min="0"
-					step="1000"
-					bind:value={inputs.otherInterestThisFY}
-					class="w-full max-w-full rounded-xl border-slate-200 bg-white py-3 pr-4 pl-8 text-slate-800 shadow-sm transition focus:border-teal-400 focus:ring-teal-400"
-				/>
-			</div>
+			<NumericInput
+				id="other-interest"
+				value={inputs.otherInterestThisFY}
+				min={0}
+				step={1000}
+				prefix="₹"
+				oncommit={(n) => {
+					inputs = { ...inputs, otherInterestThisFY: n };
+				}}
+			/>
 			<p class="mt-1 text-xs text-slate-400">
 				Aggregate FY interest: {formatINR(result.aggregateInterestThisFY)} (threshold: {formatINR(result.threshold)})
 			</p>

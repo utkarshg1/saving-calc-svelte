@@ -1,3 +1,12 @@
+import type { CapitalGainsResult } from './capitalGains';
+import {
+	buildSipMonthlySeries,
+	calculateSipCapitalGains,
+	calculateSipMaturity
+} from './sip';
+
+export type InvestmentPath = 'rd' | 'sip';
+
 export interface SavingsInputs {
 	targetAmount: number;
 	years: number;
@@ -7,6 +16,9 @@ export interface SavingsInputs {
 	fdLoanPercent: number;
 	/** RD annual interest rate as percentage, e.g. 6.4 for 6.4% */
 	rdInterestRatePercent: number;
+	/** SIP expected annual return as percentage, e.g. 12 for 12% */
+	sipReturnRatePercent: number;
+	investmentPath: InvestmentPath;
 }
 
 export interface MonthlyDataPoint {
@@ -22,17 +34,27 @@ export interface SavingsResult {
 	yearlyAmount: number;
 	monthlyAmount: number;
 	roundedMonthly: number;
+	investmentPath: InvestmentPath;
+	grossMaturity: number;
+	principalSaved: number;
+	gainsEarned: number;
+	percentageGains: number;
+	compoundedEstimate: number;
+	monthlySeries: MonthlyDataPoint[];
+	/** RD-specific */
 	quarterlyRate: number;
 	quarters: number;
 	onePlusI: number;
 	onePlusIN: number;
 	onePlusINegThird: number;
 	rdMaturity: number;
-	principalSaved: number;
 	interestEarned: number;
 	percentageInterest: number;
-	compoundedEstimate: number;
-	monthlySeries: MonthlyDataPoint[];
+	/** SIP-specific */
+	sipMaturity: number;
+	monthlyRate: number;
+	sipMonths: number;
+	cgtResult: CapitalGainsResult | null;
 }
 
 export function roundUpToNearestThousand(amount: number): number {
@@ -122,7 +144,9 @@ export function calculateSavings(inputs: SavingsInputs): SavingsResult {
 		years,
 		inflationRatePercent,
 		fdLoanPercent,
-		rdInterestRatePercent
+		rdInterestRatePercent,
+		sipReturnRatePercent,
+		investmentPath
 	} = inputs;
 
 	const inflationRate = inflationRatePercent / 100;
@@ -133,14 +157,52 @@ export function calculateSavings(inputs: SavingsInputs): SavingsResult {
 	const yearlyAmount = estimatedAmount / years;
 	const monthlyAmount = yearlyAmount / 12;
 	const roundedMonthly = roundUpToNearestThousand(monthlyAmount);
+	const principalSaved = roundedMonthly * years * 12;
+
+	if (investmentPath === 'sip') {
+		const sip = calculateSipMaturity(roundedMonthly, years, sipReturnRatePercent);
+		const cgtResult = calculateSipCapitalGains(roundedMonthly, years, sipReturnRatePercent);
+		const gainsEarned = sip.maturity - principalSaved;
+		const percentageGains = principalSaved > 0 ? (gainsEarned / principalSaved) * 100 : 0;
+		const compoundedEstimate =
+			principalSaved > 0
+				? (Math.pow(sip.maturity / principalSaved, 1 / years) - 1) * 100
+				: 0;
+		const monthlySeries = buildSipMonthlySeries(roundedMonthly, years, sipReturnRatePercent);
+
+		return {
+			inflationAdjusted,
+			estimatedAmount,
+			yearlyAmount,
+			monthlyAmount,
+			roundedMonthly,
+			investmentPath,
+			grossMaturity: sip.maturity,
+			principalSaved,
+			gainsEarned,
+			percentageGains,
+			compoundedEstimate,
+			monthlySeries,
+			quarterlyRate: 0,
+			quarters: 0,
+			onePlusI: 0,
+			onePlusIN: 0,
+			onePlusINegThird: 0,
+			rdMaturity: 0,
+			interestEarned: 0,
+			percentageInterest: 0,
+			sipMaturity: sip.maturity,
+			monthlyRate: sip.monthlyRate,
+			sipMonths: sip.months,
+			cgtResult
+		};
+	}
 
 	const rd = calculateRdMaturity(roundedMonthly, years, rdInterestRatePercent);
-	const principalSaved = roundedMonthly * years * 12;
 	const interestEarned = rd.maturity - principalSaved;
 	const percentageInterest = principalSaved > 0 ? (interestEarned / principalSaved) * 100 : 0;
 	const compoundedEstimate =
 		principalSaved > 0 ? (Math.pow(rd.maturity / principalSaved, 1 / years) - 1) * 100 : 0;
-
 	const monthlySeries = buildMonthlySeries(roundedMonthly, years, rdInterestRatePercent);
 
 	return {
@@ -149,17 +211,25 @@ export function calculateSavings(inputs: SavingsInputs): SavingsResult {
 		yearlyAmount,
 		monthlyAmount,
 		roundedMonthly,
+		investmentPath,
+		grossMaturity: rd.maturity,
+		principalSaved,
+		gainsEarned: interestEarned,
+		percentageGains: percentageInterest,
+		compoundedEstimate,
+		monthlySeries,
 		quarterlyRate: rd.quarterlyRate,
 		quarters: rd.quarters,
 		onePlusI: rd.onePlusI,
 		onePlusIN: rd.onePlusIN,
 		onePlusINegThird: rd.onePlusINegThird,
 		rdMaturity: rd.maturity,
-		principalSaved,
 		interestEarned,
 		percentageInterest,
-		compoundedEstimate,
-		monthlySeries
+		sipMaturity: 0,
+		monthlyRate: 0,
+		sipMonths: 0,
+		cgtResult: null
 	};
 }
 
@@ -168,5 +238,7 @@ export const DEFAULT_INPUTS: SavingsInputs = {
 	years: 5,
 	inflationRatePercent: 8,
 	fdLoanPercent: 85,
-	rdInterestRatePercent: 6.4
+	rdInterestRatePercent: 6.4,
+	sipReturnRatePercent: 12,
+	investmentPath: 'rd'
 };

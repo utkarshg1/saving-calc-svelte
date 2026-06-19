@@ -1,15 +1,18 @@
 # Purchase Savings Calculator
 
-A SvelteKit savings planner that helps you figure out how much to invest monthly via recurring deposits (RD) to reach a future purchase goal — adjusted for inflation, FD loan coverage, and quarterly compounding.
+A SvelteKit savings planner that helps you figure out how much to invest monthly to reach a future purchase goal — adjusted for inflation and FD loan coverage. Choose **RD** (quarterly compounding + TDS) or **SIP** (equity MF growth, capital gains tax, net FD principal).
 
-**Version:** 1.3.0
+**Version:** 1.5.0
 
 ## Features
 
 - **Inflation-adjusted targets** — projects your purchase amount forward using a configurable inflation rate
 - **FD loan coverage** — accounts for borrowing against your fixed deposit (default 85% loan ratio)
-- **Monthly RD planning** — calculates exact and rounded-up monthly deposit amounts (nearest ₹1,000)
-- **Quarterly compounding** — RD maturity uses `n = years × 4`, `i = rate ÷ 400`
+- **RD / SIP path toggle** — switch investment path at the top; monthly installment calculation is identical for both
+- **Monthly savings planning** — calculates exact and rounded-up monthly deposit amounts (nearest ₹1,000)
+- **RD path** — quarterly compounding: `n = years × 4`, `i = rate ÷ 400`
+- **SIP path** — monthly compounding at editable expected return (default 12% p.a.), full redemption with per-installment STCG/LTCG (FIFO), ₹1.25L LTCG exemption, net post-tax corpus as FD principal
+- **SIP return sensitivity** — ±3% scenario table (maturity, gains, tax, net gains, net FD) plus net capital gains after tax KPI
 - **Live KPI cards** — monthly investment, maturity, interest, compounding; plus TDS deducted and net interest when tax applies
 - **TDS calculation** — Section 194A net maturity after tax (₹40k/₹50k threshold, 10%/20% rate, Form 15G/15H)
 - **Interactive charts** — growth over time, amount comparison, principal vs interest breakdown (custom SVG)
@@ -45,9 +48,9 @@ Open the URL shown in the terminal (typically `http://localhost:5173`).
 
 The report is three A4 pages:
 
-1. Summary — inputs, TDS, and key results
+1. Summary — inputs, TDS or CGT panel, and key results
 2. Visual analysis — growth, comparison, and breakdown charts (stacked vertically)
-3. Calculation flow — step-by-step breakdown with RD formula
+3. Calculation flow — step-by-step breakdown with RD or SIP formula
 
 Report data is cleared from `localStorage` after printing.
 
@@ -67,16 +70,27 @@ Deploy to [Vercel](https://vercel.com/). The project uses `adapter-vercel` in `v
 | Years | 5 |
 | Inflation rate | 8% |
 | FD loan % | 85% |
+| Investment path | RD |
 | RD interest rate | 6.4% |
+| SIP expected return | 12% |
 
 ## Calculation Overview
+
+**Shared (steps 1–6, both paths):**
 
 1. **Inflation adjust** — `Target × (1 + rate)^years`
 2. **FD coverage** — `Inflation Adjusted ÷ FD Loan %`
 3. **Monthly savings** — divide by years × 12, round up to nearest ₹1,000
-4. **RD maturity** — `M = R × [((1 + i)^n − 1) / (1 − (1 + i)^(−1/3))]`
 
-Where `R` = monthly deposit, `n` = quarters, `i` = annual rate ÷ 400.
+**RD path (step 7+):**
+
+4. **RD maturity** — `M = R × [((1 + i)^n − 1) / (1 − (1 + i)^(−1/3))]` where `n` = quarters, `i` = annual rate ÷ 400
+
+**SIP path (step 7+):**
+
+4. **SIP maturity** — `M = P × [((1 + i)^n − 1) / i] × (1 + i)` where `i = (1 + R)^(1/12) − 1`, `n` = months
+5. **Capital gains tax** — FIFO per installment: STCG @ 20% (≤12 mo), LTCG @ 12.5% above ₹1.25L exemption
+6. **Net FD principal** — gross SIP value minus STCG and LTCG tax
 
 ## TDS (Section 194A)
 
@@ -109,7 +123,9 @@ At RD maturity, interest is subject to TDS even on direct RD → FD rollover:
 src/
 ├── lib/
 │   ├── calculations/
-│   │   ├── savings.ts          # RD math, inflation, monthly series
+│   │   ├── savings.ts          # Shared + RD/SIP branch logic
+│   │   ├── sip.ts              # SIP FV, monthly series, installment gains
+│   │   ├── capitalGains.ts     # STCG/LTCG tax with ₹1.25L exemption
 │   │   └── tds.ts              # Section 194A TDS logic
 │   ├── components/             # UI, charts (SVG), PdfReport
 │   ├── pdf/

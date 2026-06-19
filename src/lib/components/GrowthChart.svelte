@@ -1,18 +1,20 @@
 <script lang="ts">
 	import type { MonthlyDataPoint } from '$lib/calculations/savings';
 	import type { TdsResult } from '$lib/calculations/tds';
+	import type { CapitalGainsResult } from '$lib/calculations/capitalGains';
 	import { formatINR, formatINRCompact } from '$lib/utils/format';
 	import ChartTooltip from './ChartTooltip.svelte';
 
 	interface Props {
 		data: MonthlyDataPoint[];
 		tdsResult?: TdsResult;
+		cgtResult?: CapitalGainsResult | null;
 		large?: boolean;
 		/** PDF/static export — no tooltips or interaction */
 		static?: boolean;
 	}
 
-	let { data, tdsResult, large = false, static: isStatic = false }: Props = $props();
+	let { data, tdsResult, cgtResult = null, large = false, static: isStatic = false }: Props = $props();
 
 	const VB_W = 400;
 	const VB_H = 220;
@@ -22,14 +24,31 @@
 
 	const activeIndex = $derived(pinnedIndex ?? hoveredIndex);
 	const tdsApplies = $derived(tdsResult?.tdsApplicable ?? false);
+	const cgtApplies = $derived(cgtResult !== null && cgtResult.totalTax > 0);
+	const taxCutApplies = $derived(tdsApplies || cgtApplies);
 	const lastIndex = $derived(Math.max(data.length - 1, 0));
 
 	const displayData = $derived(
-		data.map((point, i) =>
-			tdsApplies && i === lastIndex && tdsResult
-				? { ...point, balance: tdsResult.netMaturityAfterTds, grossBalance: point.balance }
-				: { ...point, grossBalance: point.balance }
-		)
+		data.map((point, i) => {
+			if (i !== lastIndex) {
+				return { ...point, grossBalance: point.balance };
+			}
+			if (tdsApplies && tdsResult) {
+				return {
+					...point,
+					balance: tdsResult.netMaturityAfterTds,
+					grossBalance: point.balance
+				};
+			}
+			if (cgtApplies && cgtResult) {
+				return {
+					...point,
+					balance: cgtResult.netAfterTax,
+					grossBalance: point.balance
+				};
+			}
+			return { ...point, grossBalance: point.balance };
+		})
 	);
 
 	const chartWidth = $derived(VB_W - padding.left - padding.right);
@@ -99,13 +118,17 @@
 	const tooltipLines = $derived.by(() => {
 		if (activeIndex === null) return [];
 		const point = displayData[activeIndex];
-		const isFinalWithTds = tdsApplies && activeIndex === lastIndex && tdsResult;
+		const isFinalWithTax =
+			activeIndex === lastIndex && ((tdsApplies && tdsResult) || (cgtApplies && cgtResult));
 
-		if (isFinalWithTds) {
+		if (isFinalWithTax) {
+			const taxLabel = tdsApplies && tdsResult
+				? `TDS: −${formatINR(tdsResult.tdsDeducted)}`
+				: `CGT: −${formatINR(cgtResult!.totalTax)}`;
 			return [
 				{ text: `Principal: ${formatINR(point.principal)}`, color: '#4f46e5' },
 				{ text: `Gross: ${formatINR(point.grossBalance)}`, color: '#94a3b8' },
-				{ text: `TDS: −${formatINR(tdsResult.tdsDeducted)}`, color: '#e11d48' },
+				{ text: taxLabel, color: '#e11d48' },
 				{ text: `Net: ${formatINR(point.balance)}`, color: '#0d9488' }
 			];
 		}
@@ -182,7 +205,7 @@
 			<path d={buildPath('principal')} fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" />
 			<path d={buildPath('balance')} fill="none" stroke="#0d9488" stroke-width="2.5" stroke-linecap="round" />
 
-			{#if tdsApplies && tdsResult && data.length > 0}
+			{#if taxCutApplies && data.length > 0}
 				{@const last = displayData[lastIndex]}
 				{@const x = xPos(lastIndex)}
 				{@const yNet = yPos(last.balance)}
@@ -239,7 +262,7 @@
 				/>
 				<circle cx={xPos(activeIndex)} cy={yPos(point.balance)} r="4" fill="#0d9488" />
 				<circle cx={xPos(activeIndex)} cy={yPos(point.principal)} r="3" fill="#4f46e5" />
-				{#if tdsApplies && activeIndex === lastIndex}
+				{#if taxCutApplies && activeIndex === lastIndex}
 					<circle cx={xPos(activeIndex)} cy={yPos(point.grossBalance)} r="3" fill="#e11d48" opacity="0.7" />
 				{/if}
 			{/if}
@@ -265,12 +288,12 @@
 		</span>
 		<span class="flex items-center gap-1">
 			<span class="h-1.5 w-3 rounded-full bg-teal-500"></span>
-			{tdsApplies ? 'Net Balance' : 'Balance'}
+			{taxCutApplies ? 'Net Balance' : 'Balance'}
 		</span>
-		{#if tdsApplies}
+		{#if taxCutApplies}
 			<span class="flex items-center gap-1">
 				<span class="h-1.5 w-3 rounded-full bg-rose-500"></span>
-				TDS Cut
+				{tdsApplies ? 'TDS Cut' : 'CGT Cut'}
 			</span>
 		{/if}
 	</div>
