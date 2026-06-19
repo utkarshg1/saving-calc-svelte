@@ -37,7 +37,7 @@
 				parsed.inputs.investmentPath = 'rd';
 			}
 			if (parsed.inputs.sipReturnRatePercent === undefined) {
-				parsed.inputs.sipReturnRatePercent = 12;
+				parsed.inputs.sipReturnRatePercent = 10;
 			}
 			if (parsed.cgtResult === undefined) parsed.cgtResult = null;
 			if (parsed.tdsResult === undefined) parsed.tdsResult = null;

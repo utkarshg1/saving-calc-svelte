@@ -11,7 +11,7 @@ A SvelteKit savings planner that helps you figure out how much to invest monthly
 - **RD / SIP path toggle** — switch investment path at the top; monthly installment calculation is identical for both
 - **Monthly savings planning** — calculates exact and rounded-up monthly deposit amounts (nearest ₹1,000)
 - **RD path** — quarterly compounding: `n = years × 4`, `i = rate ÷ 400`
-- **SIP path** — monthly compounding at editable expected return (default 12% p.a.), full redemption with per-installment STCG/LTCG (FIFO), ₹1.25L LTCG exemption, net post-tax corpus as FD principal
+- **SIP path** — monthly compounding at editable expected return (default 10% p.a.), full redemption with per-installment STCG/LTCG (FIFO), ₹1.25L LTCG exemption, net post-tax corpus as FD principal
 - **SIP return sensitivity** — ±3% scenario table (maturity, gains, tax, net gains, net FD) plus net capital gains after tax KPI
 - **Live KPI cards** — monthly investment, maturity, gains, XIRR (annualized return on monthly deposits; net after-tax maturity as final inflow), plus TDS/CGT when tax applies
 - **Live input updates** — numeric fields update calculations instantly while typing (no blur or snap-to-zero while editing)
@@ -73,7 +73,7 @@ Deploy to [Vercel](https://vercel.com/). The project uses `adapter-vercel` in `v
 | FD loan % | 85% |
 | Investment path | RD |
 | RD interest rate | 6.4% |
-| SIP expected return | 12% |
+| SIP expected return | 10% |
 
 ## Calculation Overview
 

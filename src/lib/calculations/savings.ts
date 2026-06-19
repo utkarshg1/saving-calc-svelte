@@ -16,7 +16,7 @@ export interface SavingsInputs {
 	fdLoanPercent: number;
 	/** RD annual interest rate as percentage, e.g. 6.4 for 6.4% */
 	rdInterestRatePercent: number;
-	/** SIP expected annual return as percentage, e.g. 12 for 12% */
+	/** SIP expected annual return as percentage, e.g. 10 for 10% */
 	sipReturnRatePercent: number;
 	investmentPath: InvestmentPath;
 }
@@ -230,6 +230,6 @@ export const DEFAULT_INPUTS: SavingsInputs = {
 	inflationRatePercent: 8,
 	fdLoanPercent: 85,
 	rdInterestRatePercent: 6.4,
-	sipReturnRatePercent: 12,
+	sipReturnRatePercent: 10,
 	investmentPath: 'rd'
 };
