@@ -113,7 +113,7 @@
 		{#if isSip && cgtResult}
 			<div class="pdf-card">
 				<h2 class="pdf-card-title">Capital Gains on SIP Redemption</h2>
-				<p class="pdf-card-desc">Equity MF — FIFO per installment, full redemption → FD principal</p>
+				<p class="pdf-card-desc">Equity MF — FIFO per installment, full redemption → net SIP value after tax</p>
 
 				<div class="pdf-kv-grid pdf-kv-grid--spaced">
 					<div class="pdf-kv-row">
@@ -151,7 +151,7 @@
 
 				<div class="pdf-tds-highlight">
 					<div class="pdf-kv-row pdf-kv-row--flush">
-						<span class="pdf-kv-label pdf-kv-label--emphasis">Net FD Principal</span>
+						<span class="pdf-kv-label pdf-kv-label--emphasis">Net SIP Value (After Tax)</span>
 						<span class="pdf-kv-value pdf-kv-value--net">{formatINR(cgtResult.netAfterTax)}</span>
 					</div>
 				</div>
@@ -293,7 +293,7 @@
 				<p class="pdf-chart-desc">
 					{isSip
 						? cgtApplies
-							? 'Target to net FD principal'
+							? 'Target to net SIP value after tax'
 							: 'Target to SIP maturity'
 						: tdsApplies
 							? 'Target to net maturity'

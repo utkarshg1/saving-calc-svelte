@@ -81,7 +81,7 @@
 		{ label: 'Infl. Adj.', value: result.inflationAdjusted, color: '#8b5cf6' },
 		{ label: 'Estimated', value: result.estimatedAmount, color: '#6366f1' },
 		{
-			label: isSip ? (cgtApplies ? 'Net FD' : 'SIP Mat.') : tdsApplies ? 'Net Mat.' : 'Maturity',
+			label: isSip ? (cgtApplies ? 'Net SIP' : 'SIP Mat.') : tdsApplies ? 'Net Mat.' : 'Maturity',
 			value: netMaturity,
 			color: '#0d9488'
 		}
@@ -97,7 +97,7 @@
 				: 'Savings Growth Over Time',
 		comparison: isSip
 			? cgtApplies
-				? 'Amount Comparison (Net FD)'
+				? 'Amount Comparison (Net SIP)'
 				: 'Amount Comparison (SIP)'
 			: tdsApplies
 				? 'Amount Comparison (Net Maturity)'

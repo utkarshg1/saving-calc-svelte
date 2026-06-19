@@ -14,7 +14,7 @@
 	<div class="mb-5">
 		<h2 class="font-display text-lg font-semibold text-slate-800">Capital Gains on SIP Redemption</h2>
 		<p class="mt-1 text-sm text-slate-500">
-			Equity MF — FIFO per installment, full corpus redeemed and moved to FD
+			Equity MF — FIFO per installment, full corpus redeemed at tenure end
 		</p>
 	</div>
 
@@ -59,7 +59,7 @@
 		<div
 			class="flex items-center justify-between gap-4 rounded-lg border border-teal-200 bg-teal-50/80 px-3 py-2.5"
 		>
-			<span class="text-sm font-semibold text-slate-700">Net FD Principal</span>
+			<span class="text-sm font-semibold text-slate-700">Net SIP Value (After Tax)</span>
 			<span class="font-mono-num text-lg font-bold text-teal-800">
 				{formatINR(result.netAfterTax)}
 			</span>

@@ -25,7 +25,7 @@
 		'Net Maturity (after TDS)': 'Net Maturity',
 		'Net Interest after TDS': 'Net Interest',
 		'Gross SIP Value': 'Gross SIP',
-		'Net FD Principal': 'Net FD',
+		'Net SIP Value (After Tax)': 'Net SIP',
 		'Capital Gains Tax': 'CGT',
 		'Net Capital Gains After Tax': 'Net Gains'
 	};
@@ -63,7 +63,7 @@
 						},
 						{
 							id: 'net-maturity',
-							label: 'Net FD Principal',
+							label: 'Net SIP Value (After Tax)',
 							value: formatINR(cgtResult.netAfterTax),
 							subtitle: 'After STCG / LTCG on redemption',
 							accent: 'bento-glow-teal'

@@ -123,7 +123,7 @@
 					},
 					{
 						id: 12,
-						title: 'Net FD Principal',
+						title: 'Net SIP Value (After Tax)',
 						formula: 'Gross SIP − Total CGT',
 						value: formatINR(cgtResult.netAfterTax),
 						color: 'from-teal-500 to-teal-600',
@@ -221,7 +221,7 @@
 		{#if !compact}
 			<p class="mt-1 text-sm text-slate-500">
 				{isSip
-					? 'Step-by-step from your target to SIP maturity, capital gains tax, and FD principal'
+					? 'Step-by-step from your target to SIP maturity, capital gains tax, and net SIP value after tax'
 					: 'Step-by-step from your target to RD maturity with quarterly compounding'}
 			</p>
 		{/if}

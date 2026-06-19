@@ -16,7 +16,7 @@
 	const subtitle = $derived(
 		path === 'rd'
 			? 'Quarterly RD compounding with TDS on interest'
-			: 'Equity SIP at expected return → full redemption → FD principal'
+			: 'Equity SIP at expected return → full redemption → net SIP value after tax'
 	);
 </script>
 
