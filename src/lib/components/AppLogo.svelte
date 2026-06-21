@@ -32,7 +32,7 @@
 		fill="none"
 		xmlns="http://www.w3.org/2000/svg"
 		role="img"
-		aria-label="Purchase Savings Calculator"
+		aria-label="Utkarsh's Savings Calculator"
 		preserveAspectRatio="xMidYMid meet"
 		class="logo-mark block {!framed && !fullSize ? 'shrink-0 transition-transform duration-300 hover:scale-105' : ''} {className}"
 	>

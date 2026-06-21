@@ -125,11 +125,11 @@
 					<AppLogo framed size="md" />
 				</div>
 				<div class="min-w-0">
-					<p class="text-[10px] font-bold tracking-[0.2em] text-teal-600 uppercase sm:text-xs">
-						FD-Backed Savings Planner
+					<p class="font-script text-xl text-teal-700 sm:text-2xl">
+						by Utkarsh Gaikwad
 					</p>
 					<h1 class="font-display mt-2 text-3xl font-bold leading-snug tracking-normal text-slate-900 sm:text-4xl">
-						Purchase Savings Calculator
+						Utkarsh's Savings Calculator
 					</h1>
 					<p class="mt-2 max-w-lg text-sm leading-relaxed text-slate-500">
 						Inflation-adjusted targets, FD loan coverage, RD or SIP investment paths.
@@ -138,14 +138,40 @@
 			</div>
 		</header>
 
-		<!-- Path toggle at top -->
+		<!-- Path toggle + export -->
 		<section class="animate-fade-up mb-6 max-w-full sm:mb-8">
-			<InvestmentPathToggle
-				path={inputs.investmentPath}
-				onchange={(path) => {
-					inputs = { ...inputs, investmentPath: path };
-				}}
-			/>
+			<div
+				class="mx-auto flex max-w-3xl flex-col items-stretch gap-4 rounded-2xl border border-slate-200/80 bg-white/60 p-4 shadow-sm backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:p-5"
+			>
+				<div class="min-w-0 flex-1">
+					<InvestmentPathToggle
+						path={inputs.investmentPath}
+						onchange={(path) => {
+							inputs = { ...inputs, investmentPath: path };
+						}}
+					/>
+				</div>
+				<button
+					type="button"
+					class="inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-teal-600 to-teal-700 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-teal-600/25 transition hover:-translate-y-0.5 hover:from-teal-500 hover:to-teal-600 hover:shadow-lg hover:shadow-teal-600/30 focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:outline-none sm:min-h-[52px]"
+					onclick={exportPdf}
+					title="Opens print dialog — choose Save as PDF"
+				>
+					<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+						<path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" stroke-linecap="round" stroke-linejoin="round" />
+						<path d="M6 14h12v8H6z" stroke-linecap="round" stroke-linejoin="round" />
+					</svg>
+					Export PDF
+				</button>
+			</div>
+			{#if pdfError}
+				<p
+					class="mx-auto mt-3 max-w-3xl rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700"
+					role="alert"
+				>
+					{pdfError}
+				</p>
+			{/if}
 		</section>
 
 		<!-- Inputs -->
@@ -167,31 +193,7 @@
 
 		<!-- Results -->
 		<section class="mb-6 max-w-full sm:mb-8">
-			<div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-				<div>
-					<h2 class="font-display text-lg font-semibold text-slate-800">Key Results</h2>
-					<p class="mt-1 text-xs text-slate-400">
-						In the print dialog, set destination to Save as PDF.
-					</p>
-				</div>
-				<button
-					type="button"
-					class="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700 focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:outline-none"
-					onclick={exportPdf}
-					title="Opens print dialog — choose Save as PDF"
-				>
-					<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-						<path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" stroke-linecap="round" stroke-linejoin="round" />
-						<path d="M6 14h12v8H6z" stroke-linecap="round" stroke-linejoin="round" />
-					</svg>
-					Export PDF Report
-				</button>
-			</div>
-			{#if pdfError}
-				<p class="mb-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700" role="alert">
-					{pdfError}
-				</p>
-			{/if}
+			<h2 class="font-display mb-4 text-lg font-semibold text-slate-800">Key Results</h2>
 			<HeroMetrics {result} {tdsResult} {cgtResult} {xirrPercent} />
 		</section>
 

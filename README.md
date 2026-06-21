@@ -1,8 +1,8 @@
-# Purchase Savings Calculator
+# Utkarsh's Savings Calculator
 
-A SvelteKit savings planner that helps you figure out how much to invest monthly to reach a future purchase goal — adjusted for inflation and FD loan coverage. Choose **RD** (quarterly compounding + TDS) or **SIP** (equity MF growth, capital gains tax, gross and net SIP value after tax — not FD amounts).
+A SvelteKit savings planner by **Utkarsh Gaikwad** that helps you figure out how much to invest monthly to reach a future purchase goal — adjusted for inflation and FD loan coverage. Choose **RD** (quarterly compounding + TDS) or **SIP** (equity MF growth, capital gains tax, gross and net SIP value after tax — not FD amounts).
 
-**Version:** 1.7.0
+**Version:** 1.8.0
 
 ## Terminology
 
@@ -14,7 +14,7 @@ A SvelteKit savings planner that helps you figure out how much to invest monthly
 
 - **Inflation-adjusted targets** — projects your purchase amount forward using a configurable inflation rate
 - **FD loan coverage** — accounts for borrowing against your fixed deposit (default 85% loan ratio)
-- **RD / SIP path toggle** — switch investment path at the top; monthly installment calculation is identical for both
+- **RD / SIP path toolbar** — highlighted segmented toggle (teal border and ring) below the hero to switch paths; **Export PDF** sits beside it for one-click report export; monthly installment calculation is identical for both paths
 - **Monthly savings planning** — calculates exact and rounded-up monthly deposit amounts (nearest ₹1,000)
 - **RD path** — quarterly compounding: `n = years × 4`, `i = rate ÷ 400`
 - **SIP path** — monthly compounding at editable expected return (default 10% p.a.), full redemption with per-installment STCG/LTCG (FIFO), ₹1.25L LTCG exemption; shows **Gross SIP Value** then **Net SIP Value (After Tax)** after CGT
@@ -25,7 +25,7 @@ A SvelteKit savings planner that helps you figure out how much to invest monthly
 - **Interactive charts** — growth over time, amount comparison, principal vs gains breakdown with CGT/TDS slice (custom SVG)
 - **Maximizable charts** — expand any chart to fullscreen with tooltips on hover or tap
 - **Calculation flowchart** — vertical step-by-step explanation; SIP path includes STCG, LTCG, Total CGT, and Net SIP Value (After Tax) (12 steps); RD path includes TDS steps when applicable
-- **PDF report export** — 3-page A4 report via browser print (Save as PDF); summary, charts, and calculation flow; no server-side PDF libraries
+- **PDF report export** — 3-page A4 report via browser print (Save as PDF); triggered from the path toolbar; summary, charts, and calculation flow; no server-side PDF libraries
 - **Mobile-friendly** — responsive layout with no horizontal scrolling
 
 ## Tech Stack
@@ -48,7 +48,7 @@ Open the URL shown in the terminal (typically `http://localhost:5173`).
 
 ## PDF Export
 
-1. Click **Export PDF Report** on the calculator page.
+1. Click **Export PDF** in the toolbar next to the RD / SIP path toggle (below the hero).
 2. Report data is saved to `localStorage` and the app navigates to `/report?id=…` in the same tab (no pop-up required).
 3. The report page loads fonts, then opens the browser print dialog.
 4. Choose **Save as PDF** as the destination.
@@ -145,7 +145,7 @@ src/
 │   │   └── pdf-report.css      # A4 print styles
 │   └── utils/format.ts         # INR and percent formatting
 └── routes/
-    ├── +page.svelte            # Main calculator + Export PDF button
+    ├── +page.svelte            # Main calculator, path toolbar + Export PDF
     ├── +layout.svelte          # App shell and fonts
     ├── layout.css              # Global theme and animations
     └── report/                 # Client-only print page (ssr: false)

@@ -20,25 +20,26 @@
 	);
 </script>
 
-<div class="{compact ? '' : 'mb-5'}">
+<div class="{compact ? '' : ''}">
 	{#if !compact}
-		<p class="mb-2 text-center text-xs font-semibold tracking-widest text-slate-400 uppercase">
-			Investment Path
-		</p>
+		<div class="mb-2 text-center">
+			<p class="text-xs font-semibold tracking-widest text-slate-500 uppercase">Investment Path</p>
+			<p class="mt-0.5 text-[11px] text-slate-400">Tap RD or SIP to compare</p>
+		</div>
 	{/if}
 	<div
-		class="mx-auto flex max-w-md rounded-xl border border-slate-200 bg-slate-50/80 p-1 {compact
+		class="flex w-full rounded-xl border-2 border-teal-200/90 bg-white/90 p-1 shadow-md ring-4 ring-teal-50/60 transition-shadow hover:shadow-lg {compact
 			? 'max-w-xs'
-			: ''}"
+			: 'max-w-md mx-auto sm:mx-0'}"
 		role="group"
 		aria-label="Investment path"
 	>
 		<button
 			type="button"
-			class="flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold transition
+			class="flex-1 cursor-pointer rounded-lg px-4 py-2.5 text-sm font-semibold transition
 				{path === 'rd'
-				? 'bg-white text-teal-700 shadow-sm'
-				: 'text-slate-500 hover:text-slate-700'}"
+				? 'bg-white text-teal-700 shadow-md ring-1 ring-teal-100'
+				: 'text-slate-500 hover:bg-white/70 hover:text-slate-700'}"
 			aria-pressed={path === 'rd'}
 			onclick={() => select('rd')}
 		>
@@ -46,10 +47,10 @@
 		</button>
 		<button
 			type="button"
-			class="flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold transition
+			class="flex-1 cursor-pointer rounded-lg px-4 py-2.5 text-sm font-semibold transition
 				{path === 'sip'
-				? 'bg-white text-teal-700 shadow-sm'
-				: 'text-slate-500 hover:text-slate-700'}"
+				? 'bg-white text-teal-700 shadow-md ring-1 ring-teal-100'
+				: 'text-slate-500 hover:bg-white/70 hover:text-slate-700'}"
 			aria-pressed={path === 'sip'}
 			onclick={() => select('sip')}
 		>

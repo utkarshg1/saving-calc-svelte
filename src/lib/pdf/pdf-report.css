@@ -55,6 +55,14 @@
 	color: #0d9488;
 }
 
+.pdf-eyebrow--script {
+	font-family: 'Dancing Script', cursive;
+	font-size: 16px;
+	font-weight: 500;
+	letter-spacing: normal;
+	text-transform: none;
+}
+
 .pdf-title {
 	font-family: var(--font-display, 'Sora', system-ui, sans-serif);
 	font-size: 22px;

@@ -12,14 +12,14 @@
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
 	<link
-		href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+Devanagari:wght@700&family=Sora:wght@400;500;600;700&display=swap"
+		href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+Devanagari:wght@700&family=Sora:wght@400;500;600;700&display=swap"
 		rel="stylesheet"
 	/>
 	<meta
 		name="description"
-		content="Calculate your purchase savings plan with inflation adjustment, FD loan coverage, and RD quarterly compounding."
+		content="Utkarsh's Savings Calculator — inflation-adjusted purchase planning with FD loan coverage, RD or SIP investment paths."
 	/>
-	<title>Purchase Savings Calculator</title>
+	<title>Utkarsh's Savings Calculator</title>
 </svelte:head>
 
 {@render children()}

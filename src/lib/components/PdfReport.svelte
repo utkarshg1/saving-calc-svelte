@@ -57,7 +57,7 @@
 </script>
 
 {#snippet pageFooter()}
-	<p class="pdf-page-footer">Purchase Savings Calculator · {dateStr}</p>
+	<p class="pdf-page-footer">Utkarsh's Savings Calculator · {dateStr}</p>
 {/snippet}
 
 <div class="pdf-root">
@@ -65,8 +65,8 @@
 		<header class="pdf-header">
 			<AppLogo framed size="sm" />
 			<div>
-				<p class="pdf-eyebrow">FD-Backed Savings Planner</p>
-				<h1 class="pdf-title">Purchase Savings Calculator</h1>
+				<p class="pdf-eyebrow pdf-eyebrow--script">by Utkarsh Gaikwad</p>
+				<h1 class="pdf-title">Utkarsh's Savings Calculator</h1>
 				<p class="pdf-subtitle">
 					Inflation-adjusted targets, FD loan coverage, RD or SIP investment paths.
 				</p>
