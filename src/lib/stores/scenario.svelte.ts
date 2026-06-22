@@ -23,7 +23,11 @@ class ScenarioStore {
 	loadSnapshot(snapshot: ScenarioSnapshot) {
 		this.inputs = { ...DEFAULT_INPUTS, ...snapshot.inputs };
 		this.tdsInputs = { ...DEFAULT_TDS_INPUTS, ...snapshot.tdsInputs };
-		this.advanced = { ...DEFAULT_ADVANCED_INPUTS, ...snapshot.advanced };
+		this.advanced = {
+			lumpsumAmount: snapshot.advanced.lumpsumAmount ?? DEFAULT_ADVANCED_INPUTS.lumpsumAmount,
+			stepUpPercentAnnual:
+				snapshot.advanced.stepUpPercentAnnual ?? DEFAULT_ADVANCED_INPUTS.stepUpPercentAnnual
+		};
 	}
 
 	loadFromUrl(url: URL) {

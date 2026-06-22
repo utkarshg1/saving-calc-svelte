@@ -27,20 +27,6 @@
 
 	{#if open}
 		<div class="space-y-4 border-t border-slate-100 px-4 py-4 dark:border-slate-700">
-			{#if advanced.mode === 'reverse'}
-				<div>
-					<label for="monthly-budget" class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Monthly Budget</label>
-					<NumericInput
-						id="monthly-budget"
-						value={advanced.monthlyBudget}
-						min={1000}
-						step={1000}
-						prefix="₹"
-						oncommit={(n) => patch('monthlyBudget', n)}
-					/>
-				</div>
-			{/if}
-
 			<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 				<div>
 					<label for="lumpsum" class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Lumpsum (start)</label>

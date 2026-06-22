@@ -3,7 +3,6 @@
 	import HeroGeometry from '$lib/components/HeroGeometry.svelte';
 	import SectionHero from '$lib/components/SectionHero.svelte';
 	import GoalTemplatePicker from '$lib/components/GoalTemplatePicker.svelte';
-	import ModeToggle from '$lib/components/ModeToggle.svelte';
 	import AdvancedOptionsPanel from '$lib/components/AdvancedOptionsPanel.svelte';
 	import CalculatorForm from '$lib/components/CalculatorForm.svelte';
 	import InvestmentPathToggle from '$lib/components/InvestmentPathToggle.svelte';
@@ -32,7 +31,7 @@
 
 <SectionHero
 	title="Plan Your Goal"
-	description="Set your target, pick a template, and see how much to invest monthly — forward or reverse."
+	description="Set your target, pick a template, and see how much to invest monthly."
 	accent="teal"
 />
 
@@ -48,14 +47,7 @@
 
 <!-- Calculator (full width) -->
 <section class="animate-fade-up mb-6 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800/80 sm:p-6">
-	<ModeToggle
-		mode={scenario.advanced.mode}
-		onchange={(mode) => {
-			scenario.advanced = { ...scenario.advanced, mode };
-		}}
-	/>
-
-	<div class="mt-5">
+	<div>
 		<InvestmentPathToggle
 			path={scenario.inputs.investmentPath}
 			onchange={(path) => {
@@ -74,16 +66,6 @@
 		/>
 	</div>
 </section>
-
-{#if scenario.advanced.mode === 'reverse' && calc.suite.reverse}
-	<section class="animate-fade-up mb-6 rounded-2xl border border-indigo-200/80 bg-indigo-50/50 p-5 dark:border-indigo-800 dark:bg-indigo-900/20 sm:p-6">
-		<h3 class="font-display font-semibold text-indigo-900 dark:text-indigo-200">Reverse Result</h3>
-		<p class="mt-2 text-sm text-indigo-700 dark:text-indigo-300">{calc.suite.reverse.message}</p>
-		{#if calc.suite.reverse.feasible && calc.suite.reverse.yearsNeeded}
-			<p class="mt-2 font-mono-num text-2xl font-bold text-indigo-600">{calc.suite.reverse.yearsNeeded} years</p>
-		{/if}
-	</section>
-{/if}
 
 <section class="animate-fade-up mb-6">
 	{#if isSip && calc.result.cgtResult}

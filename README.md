@@ -2,12 +2,20 @@
 
 A SvelteKit savings calculator by **Utkarsh Gaikwad** — inflation-adjusted RD/SIP planning with shareable links. No database or backend required.
 
-**Version:** 2.3.3
+**Version:** 2.3.4
 
-## What's new in 2.3.3
+## What's new in 2.3.4
+
+- **Forward/Reverse mode removed** — Plan page no longer has the Forward/Reverse toggle. Reverse calculation (budget → years) and the Monthly Budget field in Advanced Options are gone.
+- **Share links** — URL params `m` and `bud` are no longer emitted. Legacy links with those params still load other fields correctly.
+
+<details>
+<summary>Previous (2.3.3)</summary>
 
 - **PPF / NSC actual XIRR** — Compare table shows computed XIRR again (not pinned rates). PPF and NSC model **yearly lump-sum deposits** with annual compounding at 7.10% / 7.7%; RD, SIP, and Debt MF remain monthly. Caption under All Instruments explains the deposit schedules.
 - **Plan page** — Historical Presets section removed (Goal Templates only).
+
+</details>
 
 <details>
 <summary>Previous (2.3.2)</summary>
@@ -79,8 +87,6 @@ https://your-app.vercel.app/?p=sip&sip=12
 | `pan` | Has PAN (0/1) |
 | `g15` | Form 15G/15H (0/1) |
 | `fy` | Other FY interest |
-| `m` | Mode: `rev` for reverse |
-| `bud` | Monthly budget (reverse) |
 | `ls` | Lumpsum |
 | `su` | Step-up % |
 

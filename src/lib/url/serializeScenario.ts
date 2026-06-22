@@ -27,6 +27,14 @@ function fromBase64Url(encoded: string): string {
 	return new TextDecoder().decode(bytes);
 }
 
+function sanitizeAdvanced(advanced: Partial<AdvancedInputs> | undefined): AdvancedInputs {
+	return {
+		lumpsumAmount: advanced?.lumpsumAmount ?? DEFAULT_ADVANCED_INPUTS.lumpsumAmount,
+		stepUpPercentAnnual:
+			advanced?.stepUpPercentAnnual ?? DEFAULT_ADVANCED_INPUTS.stepUpPercentAnnual
+	};
+}
+
 function decodeLegacySnapshot(encoded: string): ScenarioSnapshot | null {
 	try {
 		const json = fromBase64Url(encoded);
@@ -34,7 +42,7 @@ function decodeLegacySnapshot(encoded: string): ScenarioSnapshot | null {
 		return {
 			inputs: { ...DEFAULT_INPUTS, ...parsed.inputs },
 			tdsInputs: { ...DEFAULT_TDS_INPUTS, ...parsed.tdsInputs },
-			advanced: { ...DEFAULT_ADVANCED_INPUTS, ...parsed.advanced }
+			advanced: sanitizeAdvanced(parsed.advanced)
 		};
 	} catch {
 		return null;
@@ -75,9 +83,6 @@ export function buildCompactQuery(snapshot: ScenarioSnapshot): string {
 		params.set('fy', String(tdsInputs.otherInterestThisFY));
 	}
 
-	const modeCode = advanced.mode === 'reverse' ? 'rev' : 'f';
-	if (modeCode !== 'f') params.set('m', modeCode);
-	setIfDifferent(params, 'bud', advanced.monthlyBudget, DEFAULT_ADVANCED_INPUTS.monthlyBudget);
 	setIfDifferent(params, 'ls', advanced.lumpsumAmount, DEFAULT_ADVANCED_INPUTS.lumpsumAmount);
 	setIfDifferent(params, 'su', advanced.stepUpPercentAnnual, DEFAULT_ADVANCED_INPUTS.stepUpPercentAnnual);
 
@@ -98,7 +103,6 @@ export function parseCompactQuery(searchParams: URLSearchParams): ScenarioSnapsh
 	};
 
 	const path = searchParams.get('p');
-	const mode = searchParams.get('m');
 
 	return {
 		inputs: {
@@ -119,9 +123,6 @@ export function parseCompactQuery(searchParams: URLSearchParams): ScenarioSnapsh
 			otherInterestThisFY: num('fy', DEFAULT_TDS_INPUTS.otherInterestThisFY)
 		},
 		advanced: {
-			...DEFAULT_ADVANCED_INPUTS,
-			mode: mode === 'rev' ? 'reverse' : 'forward',
-			monthlyBudget: num('bud', DEFAULT_ADVANCED_INPUTS.monthlyBudget),
 			lumpsumAmount: num('ls', DEFAULT_ADVANCED_INPUTS.lumpsumAmount),
 			stepUpPercentAnnual: num('su', DEFAULT_ADVANCED_INPUTS.stepUpPercentAnnual)
 		}

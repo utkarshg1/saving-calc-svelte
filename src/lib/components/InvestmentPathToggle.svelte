@@ -29,8 +29,8 @@
 	{/if}
 	<div
 		class="flex w-full rounded-xl border-2 border-teal-200/90 bg-white/90 p-1 shadow-md ring-4 ring-teal-50/60 transition-shadow hover:shadow-lg {compact
-			? 'max-w-xs'
-			: 'max-w-md mx-auto sm:mx-0'}"
+			? 'max-w-xs mx-auto'
+			: 'max-w-md mx-auto'}"
 		role="group"
 		aria-label="Investment path"
 	>

@@ -2,7 +2,6 @@ import { calculateSavings, type SavingsInputs, type SavingsResult } from './savi
 import { calculateTds, type TdsInputs } from './tds';
 import { buildSipSensitivityTable } from './sip';
 import { calculateMonthlyInvestmentXirr } from './xirr';
-import { calculateReverse } from './reverse';
 import { calculateCompare } from './compare';
 import { buildYearlyCashflow } from './cashflow';
 import { buildTaxHints } from './taxHints';
@@ -59,13 +58,8 @@ export function calculateSuite(
 	);
 
 	const compare = calculateCompare(inputs, tdsInputs, advanced);
-	const reverse =
-		advanced.mode === 'reverse'
-			? calculateReverse(inputs, advanced.monthlyBudget)
-			: null;
 
 	const suite: SuiteResult = {
-		reverse,
 		compare,
 		cashflow: buildYearlyCashflow(result, netMaturity, tdsResult ?? undefined, cgtResult),
 		taxHints: buildTaxHints(inputs, result),
@@ -111,7 +105,6 @@ export function calculateSuite(
 export * from './savings';
 export * from './tds';
 export type {
-	CalculationMode,
 	AdvancedInputs,
 	CompareResult,
 	SuiteResult,
