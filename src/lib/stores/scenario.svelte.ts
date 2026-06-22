@@ -3,7 +3,6 @@ import { DEFAULT_INPUTS, type SavingsInputs } from '$lib/calculations/savings';
 import { DEFAULT_TDS_INPUTS, type TdsInputs } from '$lib/calculations/tds';
 import { DEFAULT_ADVANCED_INPUTS, type AdvancedInputs } from '$lib/calculations/types';
 import { parseScenarioFromUrl, type ScenarioSnapshot } from '$lib/url/serializeScenario';
-import { applyTemplate } from '$lib/presets/goalTemplates';
 import type { HistoricalPreset } from '$lib/presets/historicalPresets';
 
 class ScenarioStore {
@@ -33,10 +32,6 @@ class ScenarioStore {
 	loadFromUrl(url: URL) {
 		const snapshot = parseScenarioFromUrl(url);
 		if (snapshot) this.loadSnapshot(snapshot);
-	}
-
-	applyGoalTemplate(templateId: string) {
-		this.inputs = applyTemplate(templateId);
 	}
 
 	applyHistoricalPreset(preset: HistoricalPreset) {

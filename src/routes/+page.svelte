@@ -2,7 +2,6 @@
 	import AppLogo from '$lib/components/AppLogo.svelte';
 	import HeroGeometry from '$lib/components/HeroGeometry.svelte';
 	import SectionHero from '$lib/components/SectionHero.svelte';
-	import GoalTemplatePicker from '$lib/components/GoalTemplatePicker.svelte';
 	import AdvancedOptionsPanel from '$lib/components/AdvancedOptionsPanel.svelte';
 	import CalculatorForm from '$lib/components/CalculatorForm.svelte';
 	import InvestmentPathToggle from '$lib/components/InvestmentPathToggle.svelte';
@@ -31,15 +30,9 @@
 
 <SectionHero
 	title="Plan Your Goal"
-	description="Set your target, pick a template, and see how much to invest monthly."
+	description="Set your target and see how much to invest monthly."
 	accent="teal"
 />
-
-<!-- Goals -->
-<section class="animate-fade-up mb-6 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800/80 sm:p-6">
-	<h2 class="mb-4 text-sm font-semibold uppercase tracking-wider text-slate-500">Goal Templates</h2>
-	<GoalTemplatePicker onselect={(id) => scenario.applyGoalTemplate(id)} />
-</section>
 
 <section class="animate-fade-up mb-6">
 	<ShareLinkBar snapshot={scenario.snapshot} />

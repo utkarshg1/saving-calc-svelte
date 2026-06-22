@@ -2,12 +2,27 @@
 
 A SvelteKit savings calculator by **Utkarsh Gaikwad** — inflation-adjusted RD/SIP planning with shareable links. No database or backend required.
 
-**Version:** 2.5.2
+**Version:** 2.5.4
 
-## What's new in 2.5.2
+## What's new in 2.5.4
+
+- **Header branding** — Sticky nav shows "by Utkarsh Gaikwad" in the same cursive script and teal color as the Plan page hero, stacked above "Savings Calculator".
+- **GitHub link** — Top-right header pill opens the project repo in a new tab; mobile menu includes a "View on GitHub" row.
+
+<details>
+<summary>Previous (2.5.3)</summary>
+
+- **Goal templates removed** — The Plan page no longer shows preset goal cards (Car, Home, Wedding, etc.). Enter your own target, years, inflation, and rates directly.
+
+</details>
+
+<details>
+<summary>Previous (2.5.2)</summary>
 
 - **Chart typography fine-tune** — Axis labels, legend, and SIP excess subtext scaled down to `text-xs` / `text-[11px]` with `text-gray-400` so data lines stay dominant.
 - **Subtitle contrast** — Chart description uses `text-xs text-gray-400` under the `text-xl` title.
+
+</details>
 
 <details>
 <summary>Previous (2.5.1)</summary>
@@ -86,7 +101,7 @@ A SvelteKit savings calculator by **Utkarsh Gaikwad** — inflation-adjusted RD/
 
 | Route | Description |
 |-------|-------------|
-| `/` | **Plan** — goal templates, CPI/RD presets, share link, calculator |
+| `/` | **Plan** — share link, calculator, key results |
 | `/compare` | RD vs SIP cards and medium Growth Overlay widget (centered, snap tooltip) |
 | `/analyze` | Charts, sensitivity tables, cashflow, CGT ledger |
 | `/export` | Share link, CSV, PNG card, PDF report |

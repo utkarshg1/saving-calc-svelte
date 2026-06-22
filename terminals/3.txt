@@ -1,0 +1,16 @@
+---
+pid: 11096
+cwd: "D:\saving-calc-svelte"
+command: "cd D:\\saving-calc-svelte; npm run dev"
+started_at: 2026-06-22T17:47:38.179Z
+running_for_ms: 709997   
+---
+
+> saving-calc-svelte@2.5.2 dev
+> vite dev
+
+
+  VITE v8.0.16  ready in 3411 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
