@@ -2,11 +2,26 @@
 
 A SvelteKit savings calculator by **Utkarsh Gaikwad** — inflation-adjusted RD/SIP planning with shareable links. No database or backend required.
 
-**Version:** 2.3.1
+**Version:** 2.3.3
 
-## What's new in 2.3.1
+## What's new in 2.3.3
+
+- **PPF / NSC actual XIRR** — Compare table shows computed XIRR again (not pinned rates). PPF and NSC model **yearly lump-sum deposits** with annual compounding at 7.10% / 7.7%; RD, SIP, and Debt MF remain monthly. Caption under All Instruments explains the deposit schedules.
+- **Plan page** — Historical Presets section removed (Goal Templates only).
+
+<details>
+<summary>Previous (2.3.2)</summary>
+
+- **Light mode in production** — Tailwind v4 was applying `dark:` styles from the visitor's OS dark-mode preference (`prefers-color-scheme`), causing dark hero banners and cards on Vercel even though the site is light-only. Fixed by switching Tailwind's `dark` variant to class-based (`.dark` on `<html>`) and setting `color-scheme: light only` in `src/routes/layout.css`.
+
+</details>
+
+<details>
+<summary>Previous (2.3.1)</summary>
 
 - **PDF export (double print fix)** — Print dialog no longer reopens after Cancel or Save. A `sessionStorage` guard in `src/lib/pdf/printFlow.ts` ensures `window.print()` runs at most once per report, even when the report page remounts in dev or HMR.
+
+</details>
 
 <details>
 <summary>Previous (2.3.0)</summary>

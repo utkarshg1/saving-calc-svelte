@@ -1,9 +1,9 @@
 import type { InstrumentResult } from './types';
 import { NSC_ANNUAL_RATE_PERCENT } from './govRates';
-import { calculateMonthlyInvestmentXirr } from './xirr';
+import { simulateGovSavingsYearly, xirrFromYearlyDeposits } from './govSavings';
 
 /**
- * NSC interest compounds annually (same deposit pattern as PPF for fair monthly-plan comparison).
+ * NSC interest compounds annually (yearly lump deposit for fair comparison with RD/SIP).
  * Nominal rate: 7.7% p.a. (NSC VIII, Govt. of India small savings).
  */
 export function calculateNsc(
@@ -11,14 +11,11 @@ export function calculateNsc(
 	years: number,
 	annualRatePercent = NSC_ANNUAL_RATE_PERCENT
 ): InstrumentResult {
-	const yearlyDeposit = monthlyDeposit * 12;
-	const principalSaved = yearlyDeposit * years;
-	let grossMaturity = 0;
-
-	for (let y = 1; y <= years; y++) {
-		grossMaturity = (grossMaturity + yearlyDeposit) * (1 + annualRatePercent / 100);
-	}
-
+	const { grossMaturity, principalSaved, yearlyDeposits } = simulateGovSavingsYearly(
+		monthlyDeposit,
+		years,
+		annualRatePercent
+	);
 	const gainsEarned = grossMaturity - principalSaved;
 
 	return {
@@ -30,7 +27,7 @@ export function calculateNsc(
 		principalSaved,
 		gainsEarned,
 		taxAmount: 0,
-		xirrPercent: calculateMonthlyInvestmentXirr(monthlyDeposit, years, grossMaturity),
+		xirrPercent: xirrFromYearlyDeposits(yearlyDeposits, grossMaturity),
 		monthlyDeposit
 	};
 }

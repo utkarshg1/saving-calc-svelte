@@ -29,7 +29,10 @@
 <section>
 	<h2 class="font-display mb-1 text-lg font-semibold text-slate-800">All Instruments</h2>
 	<p class="mb-4 text-sm text-slate-500">
-		PPF @ 7.10% p.a. · NSC @ 7.7% p.a. (India govt. small savings, quarterly notified rates)
+		PPF @ 7.10% p.a. · NSC @ 7.7% p.a. (govt. small savings, quarterly notified rates).
+		RD, SIP, and Debt MF use <strong class="font-medium text-slate-600">monthly</strong> deposits;
+		PPF and NSC use <strong class="font-medium text-slate-600">one yearly deposit</strong> per year
+		(PPF capped at ₹1.5L/year). XIRR reflects each instrument's deposit schedule.
 	</p>
 	<InstrumentComparisonTable compare={calc.suite.compare} />
 </section>
