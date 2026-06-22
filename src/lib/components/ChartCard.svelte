@@ -5,14 +5,20 @@
 		title: string;
 		description?: string;
 		onmaximize?: () => void;
+		/** Tighter body padding for full-bleed charts */
+		compact?: boolean;
+		/** Taller card for full-width overlay charts */
+		tall?: boolean;
 		children: Snippet;
 	}
 
-	let { title, description, onmaximize, children }: Props = $props();
+	let { title, description, onmaximize, compact = false, tall = false, children }: Props = $props();
 </script>
 
 <div
-	class="chart-card flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/50"
+	class="chart-card flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/50 {tall
+		? 'min-h-[400px] sm:min-h-[440px]'
+		: ''}"
 >
 	<div class="flex shrink-0 items-start justify-between gap-2 border-b border-slate-100 px-3 py-2.5 sm:px-4">
 		<div class="min-w-0">
@@ -34,7 +40,11 @@
 			</button>
 		{/if}
 	</div>
-	<div class="flex min-h-0 flex-1 flex-col overflow-hidden p-3 sm:p-4">
+	<div
+		class="flex min-h-0 flex-1 flex-col overflow-hidden {compact
+			? 'p-2 sm:px-3 sm:pb-0 sm:pt-1'
+			: 'p-3 sm:p-4'}"
+	>
 		{@render children()}
 	</div>
 </div>

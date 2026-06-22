@@ -1,279 +1,108 @@
 <script lang="ts">
-	import CalculatorForm from '$lib/components/CalculatorForm.svelte';
+	import AppLogo from '$lib/components/AppLogo.svelte';
 	import HeroGeometry from '$lib/components/HeroGeometry.svelte';
+	import SectionHero from '$lib/components/SectionHero.svelte';
+	import GoalTemplatePicker from '$lib/components/GoalTemplatePicker.svelte';
+	import HistoricalPresetChips from '$lib/components/HistoricalPresetChips.svelte';
+	import ModeToggle from '$lib/components/ModeToggle.svelte';
+	import AdvancedOptionsPanel from '$lib/components/AdvancedOptionsPanel.svelte';
+	import CalculatorForm from '$lib/components/CalculatorForm.svelte';
+	import InvestmentPathToggle from '$lib/components/InvestmentPathToggle.svelte';
 	import HeroMetrics from '$lib/components/HeroMetrics.svelte';
-	import CalculationFlow from '$lib/components/CalculationFlow.svelte';
-	import ChartCard from '$lib/components/ChartCard.svelte';
-	import ChartModal from '$lib/components/ChartModal.svelte';
-	import GrowthChart from '$lib/components/GrowthChart.svelte';
-	import ComparisonChart from '$lib/components/ComparisonChart.svelte';
-	import BreakdownChart from '$lib/components/BreakdownChart.svelte';
 	import TdsPanel from '$lib/components/TdsPanel.svelte';
 	import CgtPanel from '$lib/components/CgtPanel.svelte';
-	import SipSensitivityTable from '$lib/components/SipSensitivityTable.svelte';
-	import InvestmentPathToggle from '$lib/components/InvestmentPathToggle.svelte';
-	import AppLogo from '$lib/components/AppLogo.svelte';
-	import { openPrintReport } from '$lib/pdf/generatePdf';
-	import {
-		calculateSavings,
-		DEFAULT_INPUTS,
-		type SavingsInputs
-	} from '$lib/calculations/savings';
-	import { calculateTds, DEFAULT_TDS_INPUTS, type TdsInputs } from '$lib/calculations/tds';
-	import { buildSipSensitivityTable } from '$lib/calculations/sip';
-	import { calculateMonthlyInvestmentXirr } from '$lib/calculations/xirr';
+	import TaxHintsPanel from '$lib/components/TaxHintsPanel.svelte';
+	import ShareLinkBar from '$lib/components/ShareLinkBar.svelte';
+	import { scenario } from '$lib/stores/scenario.svelte';
 
-	let inputs = $state<SavingsInputs>({ ...DEFAULT_INPUTS });
-	let tdsInputs = $state<TdsInputs>({ ...DEFAULT_TDS_INPUTS });
-	let result = $derived(calculateSavings(inputs));
-	let isSip = $derived(inputs.investmentPath === 'sip');
-	let cgtResult = $derived(result.cgtResult);
-	let sipSensitivity = $derived(
-		isSip
-			? buildSipSensitivityTable(
-					result.roundedMonthly,
-					inputs.years,
-					inputs.sipReturnRatePercent
-				)
-			: []
-	);
-	let tdsResult = $derived(
-		isSip
-			? undefined
-			: calculateTds({
-					totalInterest: result.gainsEarned,
-					grossMaturity: result.grossMaturity,
-					otherInterestThisFY: tdsInputs.otherInterestThisFY,
-					isSeniorCitizen: tdsInputs.isSeniorCitizen,
-					hasPAN: tdsInputs.hasPAN,
-					form15GHSubmitted: tdsInputs.form15GHSubmitted
-				})
-	);
-
-	type ChartId = 'growth' | 'comparison' | 'breakdown' | null;
-	let maximizedChart = $state<ChartId>(null);
-	let pdfError = $state<string | null>(null);
-
-	async function exportPdf() {
-		pdfError = null;
-		try {
-			await openPrintReport(inputs, tdsInputs);
-		} catch (err) {
-			pdfError = err instanceof Error ? err.message : 'Failed to open PDF export';
-		}
-	}
-
-	const tdsApplies = $derived(tdsResult?.tdsApplicable ?? false);
-	const cgtApplies = $derived(isSip && cgtResult !== null && cgtResult.totalTax > 0);
-	const netMaturity = $derived(
-		isSip
-			? cgtResult?.netAfterTax ?? result.grossMaturity
-			: tdsApplies
-				? tdsResult!.netMaturityAfterTds
-				: result.grossMaturity
-	);
-	const xirrPercent = $derived(
-		calculateMonthlyInvestmentXirr(result.roundedMonthly, inputs.years, netMaturity)
-	);
-
-	const comparisonItems = $derived([
-		{ label: 'Target', value: inputs.targetAmount, color: '#94a3b8' },
-		{ label: 'Infl. Adj.', value: result.inflationAdjusted, color: '#8b5cf6' },
-		{ label: 'Estimated', value: result.estimatedAmount, color: '#6366f1' },
-		{
-			label: isSip ? (cgtApplies ? 'Net SIP' : 'SIP Mat.') : tdsApplies ? 'Net Mat.' : 'Maturity',
-			value: netMaturity,
-			color: '#0d9488'
-		}
-	]);
-
-	const chartTitles = $derived<Record<Exclude<ChartId, null>, string>>({
-		growth: isSip
-			? cgtApplies
-				? 'Savings Growth (Net after CGT)'
-				: 'SIP Growth Over Time'
-			: tdsApplies
-				? 'Savings Growth (Net after TDS)'
-				: 'Savings Growth Over Time',
-		comparison: isSip
-			? cgtApplies
-				? 'Amount Comparison (Net SIP)'
-				: 'Amount Comparison (SIP)'
-			: tdsApplies
-				? 'Amount Comparison (Net Maturity)'
-				: 'Amount Comparison',
-		breakdown: isSip
-			? cgtApplies
-				? 'Principal, Gains & CGT'
-				: 'Principal vs Gains'
-			: tdsApplies
-				? 'Principal, Net Interest & TDS'
-				: 'Principal vs Interest'
-	});
+	const calc = $derived(scenario.suite);
+	const isSip = $derived(scenario.inputs.investmentPath === 'sip');
 </script>
 
-<div class="relative min-h-dvh max-w-full overflow-x-hidden">
-	<div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_20%_0%,_rgba(79,70,229,0.07)_0%,_transparent_45%)]"></div>
-	<div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_80%_100%,_rgba(13,148,136,0.06)_0%,_transparent_45%)]"></div>
-
-	<div class="relative mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-		<!-- Compact hero -->
-		<header class="relative mb-5 max-w-full overflow-hidden rounded-3xl border border-slate-200/50 bg-white/70 p-5 backdrop-blur-md sm:mb-6 sm:p-6">
-			<HeroGeometry />
-			<div class="relative z-10 flex items-start gap-3 sm:gap-5">
-				<div class="animate-fade-up shrink-0">
-					<AppLogo framed size="md" />
-				</div>
-				<div class="min-w-0">
-					<p class="font-script text-xl text-teal-700 sm:text-2xl">
-						by Utkarsh Gaikwad
-					</p>
-					<h1 class="font-display mt-2 text-3xl font-bold leading-snug tracking-normal text-slate-900 sm:text-4xl">
-						Utkarsh's Savings Calculator
-					</h1>
-					<p class="mt-2 max-w-lg text-sm leading-relaxed text-slate-500">
-						Inflation-adjusted targets, FD loan coverage, RD or SIP investment paths.
-					</p>
-				</div>
-			</div>
-		</header>
-
-		<!-- Path toggle + export -->
-		<section class="animate-fade-up mb-6 max-w-full sm:mb-8">
-			<div
-				class="mx-auto flex max-w-3xl flex-col items-stretch gap-4 rounded-2xl border border-slate-200/80 bg-white/60 p-4 shadow-sm backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:p-5"
-			>
-				<div class="min-w-0 flex-1">
-					<InvestmentPathToggle
-						path={inputs.investmentPath}
-						onchange={(path) => {
-							inputs = { ...inputs, investmentPath: path };
-						}}
-					/>
-				</div>
-				<button
-					type="button"
-					class="inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-teal-600 to-teal-700 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-teal-600/25 transition hover:-translate-y-0.5 hover:from-teal-500 hover:to-teal-600 hover:shadow-lg hover:shadow-teal-600/30 focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:outline-none sm:min-h-[52px]"
-					onclick={exportPdf}
-					title="Opens print dialog — choose Save as PDF"
-				>
-					<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-						<path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" stroke-linecap="round" stroke-linejoin="round" />
-						<path d="M6 14h12v8H6z" stroke-linecap="round" stroke-linejoin="round" />
-					</svg>
-					Export PDF
-				</button>
-			</div>
-			{#if pdfError}
-				<p
-					class="mx-auto mt-3 max-w-3xl rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700"
-					role="alert"
-				>
-					{pdfError}
-				</p>
-			{/if}
-		</section>
-
-		<!-- Inputs -->
-		<section
-			class="animate-fade-up mb-6 max-w-full rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:mb-8 sm:p-6"
-		>
-			<h2 class="font-display mb-5 text-lg font-semibold text-slate-800">Adjust Inputs</h2>
-			<CalculatorForm bind:inputs />
-		</section>
-
-		<!-- Tax panel -->
-		<section class="animate-fade-up mb-6 max-w-full sm:mb-8">
-			{#if isSip && cgtResult}
-				<CgtPanel result={cgtResult} />
-			{:else if tdsResult}
-				<TdsPanel bind:inputs={tdsInputs} result={tdsResult} />
-			{/if}
-		</section>
-
-		<!-- Results -->
-		<section class="mb-6 max-w-full sm:mb-8">
-			<h2 class="font-display mb-4 text-lg font-semibold text-slate-800">Key Results</h2>
-			<HeroMetrics {result} {tdsResult} {cgtResult} {xirrPercent} />
-		</section>
-
-		{#if isSip && sipSensitivity.length > 0}
-			<section class="animate-fade-up mb-6 max-w-full sm:mb-8">
-				<SipSensitivityTable
-					rows={sipSensitivity}
-					baseReturnPercent={inputs.sipReturnRatePercent}
-				/>
-			</section>
-		{/if}
-
-		<!-- Charts -->
-		<section class="mb-8 grid max-w-full grid-cols-1 items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
-			<ChartCard
-				title="Growth"
-				description={chartTitles.growth}
-				onmaximize={() => (maximizedChart = 'growth')}
-			>
-				<GrowthChart data={result.monthlySeries} {tdsResult} {cgtResult} />
-			</ChartCard>
-
-			<ChartCard
-				title="Comparison"
-				description={chartTitles.comparison}
-				onmaximize={() => (maximizedChart = 'comparison')}
-			>
-				<ComparisonChart items={comparisonItems} />
-			</ChartCard>
-
-			<ChartCard
-				title="Breakdown"
-				description={chartTitles.breakdown}
-				onmaximize={() => (maximizedChart = 'breakdown')}
-			>
-				<BreakdownChart
-					principal={result.principalSaved}
-					interest={result.gainsEarned}
-					{tdsResult}
-					{cgtResult}
-					gainsLabel="gains"
-				/>
-			</ChartCard>
-		</section>
-
-		<!-- Vertical flowchart at bottom -->
-		<section
-			class="animate-fade-up max-w-full rounded-3xl border border-slate-200/60 bg-slate-50/60 p-5 backdrop-blur-sm sm:p-8"
-			style="animation-delay: 150ms"
-		>
-			<CalculationFlow {inputs} {result} {tdsResult} {cgtResult} />
-		</section>
-
-		<footer class="mt-8 text-center text-xs text-slate-400">
-			{isSip
-				? 'SIP monthly compounding — i = (1 + R)^(1/12) − 1'
-				: 'Quarterly RD compounding — n = years × 4, i = rate ÷ 400'}
-		</footer>
+<header class="relative mb-6 max-w-full overflow-hidden rounded-3xl border border-slate-200/50 bg-white/70 p-5 backdrop-blur-md dark:border-slate-700/50 dark:bg-slate-800/70 sm:mb-8 sm:p-6">
+	<HeroGeometry />
+	<div class="relative z-10 flex items-start gap-3 sm:gap-5">
+		<AppLogo framed size="md" />
+		<div class="min-w-0">
+			<p class="font-script text-xl text-teal-700 dark:text-teal-400 sm:text-2xl">by Utkarsh Gaikwad</p>
+			<h1 class="font-display mt-2 text-3xl font-bold text-slate-900 dark:text-white sm:text-4xl">Utkarsh's Savings Calculator</h1>
+			<p class="mt-2 max-w-lg text-sm text-slate-500 dark:text-slate-400">Plan · Compare · Analyze — shareable savings calculator.</p>
+		</div>
 	</div>
-</div>
+</header>
 
-{#if maximizedChart}
-	<ChartModal
-		open={true}
-		title={chartTitles[maximizedChart]}
-		onclose={() => (maximizedChart = null)}
-	>
-		{#if maximizedChart === 'growth'}
-			<GrowthChart data={result.monthlySeries} {tdsResult} {cgtResult} large={true} />
-		{:else if maximizedChart === 'comparison'}
-			<ComparisonChart items={comparisonItems} large={true} />
-		{:else if maximizedChart === 'breakdown'}
-			<BreakdownChart
-				principal={result.principalSaved}
-				interest={result.gainsEarned}
-				{tdsResult}
-				{cgtResult}
-				gainsLabel="gains"
-				large={true}
-			/>
+<SectionHero
+	title="Plan Your Goal"
+	description="Set your target, pick a template, and see how much to invest monthly — forward or reverse."
+	accent="teal"
+/>
+
+<!-- Goals -->
+<section class="animate-fade-up mb-6 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800/80 sm:p-6">
+	<h2 class="mb-4 text-sm font-semibold uppercase tracking-wider text-slate-500">Goal Templates</h2>
+	<GoalTemplatePicker onselect={(id) => scenario.applyGoalTemplate(id)} />
+
+	<h2 class="mb-3 mt-6 text-sm font-semibold uppercase tracking-wider text-slate-500">Historical Presets</h2>
+	<HistoricalPresetChips onselect={(p) => scenario.applyHistoricalPreset(p)} />
+</section>
+
+<section class="animate-fade-up mb-6">
+	<ShareLinkBar snapshot={scenario.snapshot} />
+</section>
+
+<!-- Calculator (full width) -->
+<section class="animate-fade-up mb-6 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800/80 sm:p-6">
+	<ModeToggle
+		mode={scenario.advanced.mode}
+		onchange={(mode) => {
+			scenario.advanced = { ...scenario.advanced, mode };
+		}}
+	/>
+
+	<div class="mt-5">
+		<InvestmentPathToggle
+			path={scenario.inputs.investmentPath}
+			onchange={(path) => {
+				scenario.inputs = { ...scenario.inputs, investmentPath: path };
+			}}
+		/>
+	</div>
+
+	<h2 class="font-display mb-5 mt-6 text-lg font-semibold text-slate-800 dark:text-white">Adjust Inputs</h2>
+	<CalculatorForm bind:inputs={scenario.inputs} />
+
+	<div class="mt-5">
+		<AdvancedOptionsPanel
+			advanced={scenario.advanced}
+			onchange={(a) => (scenario.advanced = a)}
+		/>
+	</div>
+</section>
+
+{#if scenario.advanced.mode === 'reverse' && calc.suite.reverse}
+	<section class="animate-fade-up mb-6 rounded-2xl border border-indigo-200/80 bg-indigo-50/50 p-5 dark:border-indigo-800 dark:bg-indigo-900/20 sm:p-6">
+		<h3 class="font-display font-semibold text-indigo-900 dark:text-indigo-200">Reverse Result</h3>
+		<p class="mt-2 text-sm text-indigo-700 dark:text-indigo-300">{calc.suite.reverse.message}</p>
+		{#if calc.suite.reverse.feasible && calc.suite.reverse.yearsNeeded}
+			<p class="mt-2 font-mono-num text-2xl font-bold text-indigo-600">{calc.suite.reverse.yearsNeeded} years</p>
 		{/if}
-	</ChartModal>
+	</section>
 {/if}
+
+<section class="animate-fade-up mb-6">
+	{#if isSip && calc.result.cgtResult}
+		<CgtPanel result={calc.result.cgtResult} />
+	{:else if calc.tdsResult}
+		<TdsPanel bind:inputs={scenario.tdsInputs} result={calc.tdsResult} />
+	{/if}
+</section>
+
+<section class="animate-fade-up mb-6">
+	<h2 class="font-display mb-4 text-lg font-semibold text-slate-800 dark:text-white">Key Results</h2>
+	<HeroMetrics result={calc.result} tdsResult={calc.tdsResult ?? undefined} cgtResult={calc.result.cgtResult} xirrPercent={calc.xirrPercent} />
+</section>
+
+<section class="animate-fade-up mb-6">
+	<h2 class="font-display mb-4 text-lg font-semibold text-slate-800 dark:text-white">Tax Hints</h2>
+	<TaxHintsPanel hints={calc.suite.taxHints} />
+</section>

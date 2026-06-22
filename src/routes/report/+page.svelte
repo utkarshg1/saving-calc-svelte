@@ -3,75 +3,76 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import PdfReport from '$lib/components/PdfReport.svelte';
+	import { DEFAULT_INPUTS } from '$lib/calculations/savings';
 	import type { ReportPayload } from '$lib/pdf/buildReportPayload';
 	import { clearReportPayload, loadReportPayload } from '$lib/pdf/generatePdf';
+	import { claimPrintSession, waitForPrintDialogClose } from '$lib/pdf/printFlow';
 
 	let payload = $state<ReportPayload | null>(null);
 	let error = $state<string | null>(null);
 	let printing = $state(true);
 
-	let mountHandled = false;
-
-	function finishPrint(reportId: string | null) {
-		printing = false;
-		if (reportId) clearReportPayload(reportId);
-	}
-
-	onMount(async () => {
-		if (mountHandled) return;
-		mountHandled = true;
-
+	onMount(() => {
 		const reportId = page.url.searchParams.get('id');
+		let printFlowDone = false;
+		let detachPrintHandlers: (() => void) | undefined;
 
-		try {
-			const raw = loadReportPayload(reportId);
-
-			if (!raw) {
-				error = 'Report data not found. Please export again from the calculator.';
-				printing = false;
-				return;
-			}
-
-			const parsed = JSON.parse(raw) as ReportPayload;
-			if (!parsed.inputs.investmentPath) {
-				parsed.inputs.investmentPath = 'rd';
-			}
-			if (parsed.inputs.sipReturnRatePercent === undefined) {
-				parsed.inputs.sipReturnRatePercent = 10;
-			}
-			if (parsed.cgtResult === undefined) parsed.cgtResult = null;
-			if (parsed.tdsResult === undefined) parsed.tdsResult = null;
-			if (parsed.sipSensitivity === undefined) parsed.sipSensitivity = [];
-			if (parsed.xirrPercent === undefined) parsed.xirrPercent = null;
-			payload = parsed;
-
-			await tick();
-			if (document.fonts?.ready) {
-				await document.fonts.ready;
-			}
-			await new Promise<void>((resolve) =>
-				requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
-			);
-
-			const onAfterPrint = () => finishPrint(reportId);
-			window.addEventListener('afterprint', onAfterPrint, { once: true });
-
-			const printMql = window.matchMedia('print');
-			const onPrintMediaChange = (event: MediaQueryListEvent) => {
-				if (!event.matches) finishPrint(reportId);
-			};
-			printMql.addEventListener('change', onPrintMediaChange);
-
-			window.print();
-
-			finishPrint(reportId);
-
-			window.removeEventListener('afterprint', onAfterPrint);
-			printMql.removeEventListener('change', onPrintMediaChange);
-		} catch {
-			error = 'Failed to load report data.';
+		function finishPrintFlow() {
+			if (printFlowDone) return;
+			printFlowDone = true;
+			detachPrintHandlers?.();
+			detachPrintHandlers = undefined;
 			printing = false;
+			if (reportId) clearReportPayload(reportId);
 		}
+
+		void (async () => {
+			try {
+				const raw = loadReportPayload(reportId);
+
+				if (!raw) {
+					error = 'Report data not found. Please export again from the calculator.';
+					printing = false;
+					return;
+				}
+
+				const parsed = JSON.parse(raw) as ReportPayload;
+				if (!parsed.inputs.investmentPath) {
+					parsed.inputs.investmentPath = 'rd';
+				}
+				if (parsed.inputs.sipReturnRatePercent === undefined) {
+					parsed.inputs.sipReturnRatePercent = DEFAULT_INPUTS.sipReturnRatePercent;
+				}
+				if (parsed.cgtResult === undefined) parsed.cgtResult = null;
+				if (parsed.tdsResult === undefined) parsed.tdsResult = null;
+				if (parsed.sipSensitivity === undefined) parsed.sipSensitivity = [];
+				if (parsed.xirrPercent === undefined) parsed.xirrPercent = null;
+				payload = parsed;
+
+				await tick();
+				if (document.fonts?.ready) {
+					await document.fonts.ready;
+				}
+				await new Promise<void>((resolve) =>
+					requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+				);
+
+				if (!reportId || !claimPrintSession(reportId)) {
+					printing = false;
+					return;
+				}
+
+				detachPrintHandlers = waitForPrintDialogClose(() => finishPrintFlow());
+				window.print();
+			} catch {
+				error = 'Failed to load report data.';
+				printing = false;
+			}
+		})();
+
+		return () => {
+			detachPrintHandlers?.();
+		};
 	});
 </script>
 

@@ -1,0 +1,17 @@
+{
+	"name": "Utkarsh's Savings Calculator",
+	"short_name": "Savings Calc",
+	"description": "Inflation-adjusted savings planning with RD, SIP, and tax-aware analysis.",
+	"start_url": "/",
+	"display": "standalone",
+	"background_color": "#f5f4f0",
+	"theme_color": "#0d9488",
+	"icons": [
+		{
+			"src": "/icon.svg",
+			"sizes": "any",
+			"type": "image/svg+xml",
+			"purpose": "any"
+		}
+	]
+}

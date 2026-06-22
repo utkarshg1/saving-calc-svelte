@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { CHART_COLORS, CHART_TYPO } from '$lib/chart/chartTheme';
 	import { formatINR, formatINRCompact } from '$lib/utils/format';
 	import ChartTooltip from './ChartTooltip.svelte';
 
@@ -76,6 +77,14 @@
 			preserveAspectRatio="xMidYMid meet"
 			class="block h-full w-full"
 		>
+			<rect
+				x={padding.left}
+				y={padding.top}
+				width={chartWidth}
+				height={chartHeight}
+				fill={CHART_COLORS.plotFill}
+				rx="6"
+			/>
 			{#each items as item, i}
 				{@const h = barHeight(item.value)}
 				{@const x = barX(i)}
@@ -103,7 +112,7 @@
 					y={y - 5}
 					text-anchor="middle"
 					fill="#475569"
-					font-size="8"
+					font-size={CHART_TYPO.axisFontSize}
 					font-weight="600"
 				>
 					{formatINRCompact(item.value)}
@@ -113,7 +122,7 @@
 					y={VB_H - 10}
 					text-anchor="middle"
 					fill="#94a3b8"
-					font-size="8"
+					font-size={CHART_TYPO.axisFontSize}
 				>
 					{item.label}
 				</text>

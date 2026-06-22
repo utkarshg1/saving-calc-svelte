@@ -2,6 +2,7 @@
 	import type { MonthlyDataPoint } from '$lib/calculations/savings';
 	import type { TdsResult } from '$lib/calculations/tds';
 	import type { CapitalGainsResult } from '$lib/calculations/capitalGains';
+	import { CHART_COLORS, CHART_TYPO } from '$lib/chart/chartTheme';
 	import { formatINR, formatINRCompact } from '$lib/utils/format';
 	import ChartTooltip from './ChartTooltip.svelte';
 
@@ -178,13 +179,22 @@
 				</linearGradient>
 			</defs>
 
+			<rect
+				x={padding.left}
+				y={padding.top}
+				width={chartWidth}
+				height={chartHeight}
+				fill={CHART_COLORS.plotFill}
+				rx="6"
+			/>
+
 			{#each yTicks as tick}
 				<line
 					x1={padding.left}
 					y1={yPos(tick)}
 					x2={padding.left + chartWidth}
 					y2={yPos(tick)}
-					stroke="#e2e8f0"
+					stroke={CHART_COLORS.grid}
 					stroke-width="1"
 					stroke-dasharray="3 3"
 				/>
@@ -193,8 +203,8 @@
 					y={yPos(tick)}
 					text-anchor="end"
 					dominant-baseline="middle"
-					fill="#94a3b8"
-					font-size="9"
+					fill={CHART_COLORS.axisMuted}
+					font-size={CHART_TYPO.axisFontSize}
 				>
 					{formatINRCompact(tick)}
 				</text>
@@ -273,7 +283,7 @@
 					y={VB_H - 6}
 					text-anchor="middle"
 					fill="#94a3b8"
-					font-size="9"
+					font-size={CHART_TYPO.axisFontSize}
 				>
 					Y{point.year}
 				</text>
