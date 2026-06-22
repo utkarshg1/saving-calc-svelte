@@ -4,7 +4,7 @@ import type { MonthlyDataPoint } from './savings';
 import type { InvestmentPath } from './savings';
 
 export type { InvestmentPath };
-export type InstrumentId = 'rd' | 'sip' | 'ppf' | 'nsc' | 'debt_mf';
+export type InstrumentId = 'rd' | 'sip';
 
 export interface AdvancedInputs {
 	lumpsumAmount: number;
@@ -32,11 +32,6 @@ export interface InstrumentResult {
 export interface CompareResult {
 	rd: InstrumentResult;
 	sip: InstrumentResult;
-	ppf: InstrumentResult;
-	nsc: InstrumentResult;
-	debtMf: InstrumentResult;
-	bestNetReturn: InstrumentId;
-	lowestRisk: InstrumentId;
 }
 
 export interface CashflowYearRow {

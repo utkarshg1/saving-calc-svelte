@@ -2,17 +2,50 @@
 
 A SvelteKit savings calculator by **Utkarsh Gaikwad** — inflation-adjusted RD/SIP planning with shareable links. No database or backend required.
 
-**Version:** 2.3.4
+**Version:** 2.5.2
 
-## What's new in 2.3.4
+## What's new in 2.5.2
+
+- **Chart typography fine-tune** — Axis labels, legend, and SIP excess subtext scaled down to `text-xs` / `text-[11px]` with `text-gray-400` so data lines stay dominant.
+- **Subtitle contrast** — Chart description uses `text-xs text-gray-400` under the `text-xl` title.
+
+<details>
+<summary>Previous (2.5.1)</summary>
+
+- **Medium Growth Overlay widget** — Chart is centered (`max-w-5xl`), fixed at 450px height, and self-contained with its own title, border, and shadow (no nested `ChartCard` on `/compare`).
+- **Readable typography** — Axis labels stepped up to `text-sm` / `text-gray-500`; tooltip currency values use `text-base font-medium` with tabular monospace.
+- **Balanced strokes** — RD/SIP lines at 3.5px with increased SVG padding so axis labels have room to breathe.
+
+</details>
+
+<details>
+<summary>Previous (2.5.0)</summary>
+
+- **Growth Overlay redesign** — Compare chart is data-first: hero RD/SIP lines with faint gradient fills, whisper-light grid and axis labels, no vertical grid, and a floating tooltip with colored indicators and tabular currency values.
+- **Legend & summary** — Bottom-left legend and bottom-right SIP excess callout use cleaner typography hierarchy.
+
+</details>
+
+<details>
+<summary>Previous (2.4.0)</summary>
+
+- **RD vs SIP only** — Compare page no longer includes the All Instruments table (PPF, NSC, Debt MF). The app focuses on recurring deposit vs SIP planning and comparison.
+- **Removed calculation modules** — `ppf`, `nsc`, `debtMf`, `govRates`, and `govSavings` are gone; `CompareResult` is now `{ rd, sip }` only.
+
+</details>
+
+<details>
+<summary>Previous (2.3.4)</summary>
 
 - **Forward/Reverse mode removed** — Plan page no longer has the Forward/Reverse toggle. Reverse calculation (budget → years) and the Monthly Budget field in Advanced Options are gone.
 - **Share links** — URL params `m` and `bud` are no longer emitted. Legacy links with those params still load other fields correctly.
 
+</details>
+
 <details>
 <summary>Previous (2.3.3)</summary>
 
-- **PPF / NSC actual XIRR** — Compare table shows computed XIRR again (not pinned rates). PPF and NSC model **yearly lump-sum deposits** with annual compounding at 7.10% / 7.7%; RD, SIP, and Debt MF remain monthly. Caption under All Instruments explains the deposit schedules.
+- **PPF / NSC actual XIRR** — Compare table showed computed XIRR (not pinned rates). PPF and NSC modeled yearly lump-sum deposits with annual compounding at 7.10% / 7.7%.
 - **Plan page** — Historical Presets section removed (Goal Templates only).
 
 </details>
@@ -54,7 +87,7 @@ A SvelteKit savings calculator by **Utkarsh Gaikwad** — inflation-adjusted RD/
 | Route | Description |
 |-------|-------------|
 | `/` | **Plan** — goal templates, CPI/RD presets, share link, calculator |
-| `/compare` | RD vs SIP cards, Growth Overlay chart (tooltips), 5-instrument table |
+| `/compare` | RD vs SIP cards and medium Growth Overlay widget (centered, snap tooltip) |
 | `/analyze` | Charts, sensitivity tables, cashflow, CGT ledger |
 | `/export` | Share link, CSV, PNG card, PDF report |
 

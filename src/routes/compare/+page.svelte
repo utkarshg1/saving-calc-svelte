@@ -1,17 +1,15 @@
 <script lang="ts">
 	import SectionHero from '$lib/components/SectionHero.svelte';
 	import DualPathComparison from '$lib/components/DualPathComparison.svelte';
-	import InstrumentComparisonTable from '$lib/components/InstrumentComparisonTable.svelte';
 	import DualGrowthChart from '$lib/components/DualGrowthChart.svelte';
-	import ChartCard from '$lib/components/ChartCard.svelte';
 	import { scenario } from '$lib/stores/scenario.svelte';
 
 	const calc = $derived(scenario.suite);
 </script>
 
 <SectionHero
-	title="Compare Instruments"
-	description="Side-by-side RD vs SIP and full comparison across PPF, NSC, and Debt MF."
+	title="Compare RD vs SIP"
+	description="Side-by-side comparison of net maturity, tax, gains, and XIRR for recurring deposits vs mutual fund SIPs."
 	accent="indigo"
 />
 
@@ -21,18 +19,11 @@
 </section>
 
 <section class="mb-8">
-	<ChartCard title="Growth Overlay" description="RD vs SIP balance over time (principal reference)" compact tall>
-		<DualGrowthChart inputs={scenario.inputs} compare={calc.suite.compare} monthly={calc.result.roundedMonthly} />
-	</ChartCard>
-</section>
-
-<section>
-	<h2 class="font-display mb-1 text-lg font-semibold text-slate-800">All Instruments</h2>
-	<p class="mb-4 text-sm text-slate-500">
-		PPF @ 7.10% p.a. · NSC @ 7.7% p.a. (govt. small savings, quarterly notified rates).
-		RD, SIP, and Debt MF use <strong class="font-medium text-slate-600">monthly</strong> deposits;
-		PPF and NSC use <strong class="font-medium text-slate-600">one yearly deposit</strong> per year
-		(PPF capped at ₹1.5L/year). XIRR reflects each instrument's deposit schedule.
-	</p>
-	<InstrumentComparisonTable compare={calc.suite.compare} />
+	<DualGrowthChart
+		inputs={scenario.inputs}
+		compare={calc.suite.compare}
+		monthly={calc.result.roundedMonthly}
+		title="Growth Overlay"
+		description="RD vs SIP balance over time (principal reference)"
+	/>
 </section>

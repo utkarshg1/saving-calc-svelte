@@ -3,10 +3,7 @@ import { calculateSavings } from './savings';
 import { calculateTds, type TdsInputs } from './tds';
 import { calculateSipCapitalGains } from './sip';
 import { calculateMonthlyInvestmentXirr } from './xirr';
-import { calculatePpf } from './ppf';
-import { calculateNsc } from './nsc';
-import { calculateDebtMf } from './debtMf';
-import type { AdvancedInputs, CompareResult, InstrumentId, InstrumentResult } from './types';
+import type { AdvancedInputs, CompareResult, InstrumentResult } from './types';
 import {
 	calculateStepUpRdMaturity,
 	calculateStepUpSipMaturity,
@@ -129,15 +126,6 @@ export function calculateCompare(
 
 	const rd = buildRdInstrument(inputs, monthly, advanced, tdsInputs);
 	const sip = buildSipInstrument(inputs, monthly, advanced);
-	const ppf = calculatePpf(monthly, inputs.years);
-	const nsc = calculateNsc(monthly, inputs.years);
-	const debtMf = calculateDebtMf(monthly, inputs.years, inputs.rdInterestRatePercent);
 
-	const instruments = [rd, sip, ppf, nsc, debtMf];
-	const bestNetReturn = instruments.reduce((best, cur) =>
-		cur.netMaturity > best.netMaturity ? cur : best
-	).id;
-	const lowestRisk = 'ppf' as InstrumentId;
-
-	return { rd, sip, ppf, nsc, debtMf, bestNetReturn, lowestRisk };
+	return { rd, sip };
 }
