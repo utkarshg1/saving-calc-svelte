@@ -12,6 +12,7 @@ export function buildYearlyCashflow(
 	const years = Math.ceil(result.monthlySeries.length / 12);
 	const rows: CashflowYearRow[] = [];
 	const monthlyDeposit = result.roundedMonthly;
+	const isStepUp = result.investmentPath === 'stepup-sip';
 	const tdsApplies = tdsResult?.tdsApplicable ?? false;
 	const cgtApplies = cgtResult !== null && (cgtResult?.totalTax ?? 0) > 0;
 	const totalTax = tdsApplies
@@ -23,7 +24,13 @@ export function buildYearlyCashflow(
 	let cumulativeDeposits = 0;
 
 	for (let y = 1; y <= years; y++) {
-		const deposits = monthlyDeposit * 12;
+		const yearSeries = result.monthlySeries.filter((p) => p.year === y);
+		const deposits = isStepUp && yearSeries.length > 0
+			? yearSeries.reduce((sum, p, i) => {
+					const prevPrincipal = i > 0 ? yearSeries[i - 1].principal : (y > 1 ? result.monthlySeries.filter(p => p.year === y - 1).at(-1)?.principal ?? 0 : 0);
+					return sum + (p.principal - prevPrincipal);
+				}, 0)
+			: monthlyDeposit * 12;
 		cumulativeDeposits += deposits;
 		const lastMonthOfYear = result.monthlySeries.find((p) => p.year === y && p.month === y * 12)
 			?? result.monthlySeries.filter((p) => p.year === y).at(-1);

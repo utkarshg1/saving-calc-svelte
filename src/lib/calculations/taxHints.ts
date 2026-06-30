@@ -3,7 +3,7 @@ import type { TaxHint } from './types';
 
 export function buildTaxHints(inputs: SavingsInputs, result: SavingsResult): TaxHint[] {
 	const yearlyInvestment = result.roundedMonthly * 12;
-	const isSip = inputs.investmentPath === 'sip';
+	const isSip = inputs.investmentPath === 'sip' || inputs.investmentPath === 'stepup-sip';
 
 	const hints: TaxHint[] = [
 		{

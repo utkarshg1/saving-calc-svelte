@@ -2,7 +2,6 @@
 	import AppLogo from '$lib/components/AppLogo.svelte';
 	import HeroGeometry from '$lib/components/HeroGeometry.svelte';
 	import SectionHero from '$lib/components/SectionHero.svelte';
-	import AdvancedOptionsPanel from '$lib/components/AdvancedOptionsPanel.svelte';
 	import CalculatorForm from '$lib/components/CalculatorForm.svelte';
 	import InvestmentPathToggle from '$lib/components/InvestmentPathToggle.svelte';
 	import HeroMetrics from '$lib/components/HeroMetrics.svelte';
@@ -13,7 +12,7 @@
 	import { scenario } from '$lib/stores/scenario.svelte';
 
 	const calc = $derived(scenario.suite);
-	const isSip = $derived(scenario.inputs.investmentPath === 'sip');
+	const isSip = $derived(scenario.inputs.investmentPath === 'sip' || scenario.inputs.investmentPath === 'stepup-sip');
 </script>
 
 <header class="relative mb-6 max-w-full overflow-hidden rounded-3xl border border-slate-200/50 bg-white/70 p-5 backdrop-blur-md dark:border-slate-700/50 dark:bg-slate-800/70 sm:mb-8 sm:p-6">
@@ -51,13 +50,6 @@
 
 	<h2 class="font-display mb-5 mt-6 text-lg font-semibold text-slate-800 dark:text-white">Adjust Inputs</h2>
 	<CalculatorForm bind:inputs={scenario.inputs} />
-
-	<div class="mt-5">
-		<AdvancedOptionsPanel
-			advanced={scenario.advanced}
-			onchange={(a) => (scenario.advanced = a)}
-		/>
-	</div>
 </section>
 
 <section class="animate-fade-up mb-6">

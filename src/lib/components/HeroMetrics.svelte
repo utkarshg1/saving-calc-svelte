@@ -16,8 +16,8 @@
 
 	let { result, tdsResult, cgtResult = null, xirrPercent = null, pdf = false }: Props = $props();
 
-	const isSip = $derived(result.investmentPath === 'sip');
-	const tdsApplies = $derived(!isSip && (tdsResult?.tdsApplicable ?? false));
+	const isSip = $derived(result.investmentPath === 'sip' || result.investmentPath === 'stepup-sip');
+	const tdsApplies = $derived(result.investmentPath === 'rd' && (tdsResult?.tdsApplicable ?? false));
 	const cgtApplies = $derived(isSip && cgtResult !== null && cgtResult.totalTax > 0);
 
 	const PDF_LABELS: Record<string, string> = {

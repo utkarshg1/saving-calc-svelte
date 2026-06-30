@@ -10,9 +10,11 @@
 	import CashflowTable from '$lib/components/CashflowTable.svelte';
 	import CgtLedgerTable from '$lib/components/CgtLedgerTable.svelte';
 	import CalculationFlow from '$lib/components/CalculationFlow.svelte';
+	import StepUpSchedule from '$lib/components/StepUpSchedule.svelte';
 	import { scenario } from '$lib/stores/scenario.svelte';
 	const calc = $derived(scenario.suite);
-	const isSip = $derived(scenario.inputs.investmentPath === 'sip');
+	const isSip = $derived(scenario.inputs.investmentPath === 'sip' || scenario.inputs.investmentPath === 'stepup-sip');
+	const isStepUp = $derived(scenario.inputs.investmentPath === 'stepup-sip');
 	const tdsApplies = $derived(calc.tdsResult?.tdsApplicable ?? false);
 	const cgtApplies = $derived(isSip && calc.result.cgtResult !== null && (calc.result.cgtResult?.totalTax ?? 0) > 0);
 
@@ -39,6 +41,18 @@
 		<BreakdownChart principal={calc.result.principalSaved} interest={calc.result.gainsEarned} tdsResult={calc.tdsResult ?? undefined} cgtResult={calc.result.cgtResult} gainsLabel="gains" />
 	</ChartCard>
 </section>
+
+{#if isStepUp}
+	<section class="mb-8">
+		<h2 class="font-display mb-4 text-lg font-semibold text-slate-800">Step-Up SIP Schedule</h2>
+		<StepUpSchedule
+			baseMonthly={calc.result.roundedMonthly}
+			topUpAmount={scenario.inputs.stepUpTopUpAmount}
+			cap={scenario.inputs.stepUpCapAmount}
+			years={scenario.inputs.years}
+		/>
+	</section>
+{/if}
 
 <section class="mb-8">
 	<h2 class="font-display mb-4 text-lg font-semibold text-slate-800">Inflation Sensitivity</h2>

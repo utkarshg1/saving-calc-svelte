@@ -20,7 +20,12 @@ class ScenarioStore {
 	}
 
 	loadSnapshot(snapshot: ScenarioSnapshot) {
-		this.inputs = { ...DEFAULT_INPUTS, ...snapshot.inputs };
+		this.inputs = {
+			...DEFAULT_INPUTS,
+			...snapshot.inputs,
+			stepUpTopUpAmount: snapshot.inputs.stepUpTopUpAmount ?? DEFAULT_INPUTS.stepUpTopUpAmount,
+			stepUpCapAmount: snapshot.inputs.stepUpCapAmount ?? DEFAULT_INPUTS.stepUpCapAmount
+		};
 		this.tdsInputs = { ...DEFAULT_TDS_INPUTS, ...snapshot.tdsInputs };
 		this.advanced = {
 			lumpsumAmount: snapshot.advanced.lumpsumAmount ?? DEFAULT_ADVANCED_INPUTS.lumpsumAmount,

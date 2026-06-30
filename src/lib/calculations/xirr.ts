@@ -89,3 +89,31 @@ export function calculateMonthlyInvestmentXirr(
 	const rate = calculateXirr(amounts, dates);
 	return rate !== null ? rate * 100 : null;
 }
+
+/**
+ * XIRR for varying monthly deposits, net maturity at tenure end.
+ */
+export function calculateVariableMonthlyXirr(
+	deposits: number[],
+	netMaturity: number
+): number | null {
+	const months = deposits.length;
+	if (months <= 0 || netMaturity <= 0) return null;
+
+	const amounts: number[] = [];
+	const dates: number[] = [];
+
+	for (let i = 0; i < months; i++) {
+		if (deposits[i] <= 0) continue;
+		amounts.push(-deposits[i]);
+		dates.push(i / 12);
+	}
+
+	if (amounts.length === 0) return null;
+
+	amounts.push(netMaturity);
+	dates.push(months / 12);
+
+	const rate = calculateXirr(amounts, dates);
+	return rate !== null ? rate * 100 : null;
+}

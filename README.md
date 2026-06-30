@@ -2,12 +2,22 @@
 
 A SvelteKit savings calculator by **Utkarsh Gaikwad** — inflation-adjusted RD/SIP planning with shareable links. No database or backend required.
 
-**Version:** 2.5.4
+**Version:** 2.6.0
 
-## What's new in 2.5.4
+## What's new in 2.6.0
+
+- **Step-Up SIP on Compare page** — New settings panel for annual top-up amount and monthly cap. The compare page displays three cards (RD, SIP, Step-Up SIP) with a "Best" badge on the highest net-gain instrument. Gains comparison summaries for all pairs (SIP vs RD, Step-Up vs RD, Step-Up vs SIP).
+- **Step-Up line on Growth Overlay chart** — Amber solid line for Step-Up SIP balance, plus a rose dashed Step-Up Principal line showing cumulative deposits. Legend and tooltip updated accordingly.
+- **SIP vs RD excess removed from chart** — The tooltip delta row and bottom excess summary have been removed from the Growth Overlay chart (kept in the comparison card section below).
+- **Comparison card refinements** — Each card now shows "Principal", "Net Gains" (gains − tax), and monthly deposit detail. Step-Up SIP card displays the top-up and cap information.
+
+<details>
+<summary>Previous (2.5.4)</summary>
 
 - **Header branding** — Sticky nav shows "by Utkarsh Gaikwad" in the same cursive script and teal color as the Plan page hero, stacked above "Savings Calculator".
 - **GitHub link** — Top-right header pill opens the project repo in a new tab; mobile menu includes a "View on GitHub" row.
+
+</details>
 
 <details>
 <summary>Previous (2.5.3)</summary>

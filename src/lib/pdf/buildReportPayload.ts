@@ -24,7 +24,7 @@ export interface ReportPayload {
 
 export function buildReportPayload(inputs: SavingsInputs, tdsInputs: TdsInputs): ReportPayload {
 	const result = calculateSavings(inputs);
-	const isSip = inputs.investmentPath === 'sip';
+	const isSip = inputs.investmentPath === 'sip' || inputs.investmentPath === 'stepup-sip';
 
 	const tdsResult = isSip
 		? null

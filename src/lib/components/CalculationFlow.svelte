@@ -17,7 +17,7 @@
 
 	let { inputs, result, tdsResult, cgtResult = null, compact = false }: Props = $props();
 
-	const isSip = $derived(inputs.investmentPath === 'sip');
+	const isSip = $derived(inputs.investmentPath === 'sip' || inputs.investmentPath === 'stepup-sip');
 
 	const baseSteps = $derived([
 		{

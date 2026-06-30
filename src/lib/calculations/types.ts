@@ -32,6 +32,7 @@ export interface InstrumentResult {
 export interface CompareResult {
 	rd: InstrumentResult;
 	sip: InstrumentResult;
+	stepupSip?: InstrumentResult;
 }
 
 export interface CashflowYearRow {

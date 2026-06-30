@@ -4,8 +4,14 @@ import {
 	calculateSipCapitalGains,
 	calculateSipMaturity
 } from './sip';
+import {
+	buildFixedStepUpSipSeries,
+	calculateFixedStepUpCapitalGains,
+	calculateFixedStepUpSipMaturity,
+	totalDepositsWithFixedStepUp
+} from './stepUp';
 
-export type InvestmentPath = 'rd' | 'sip';
+export type InvestmentPath = 'rd' | 'sip' | 'stepup-sip';
 
 export interface SavingsInputs {
 	targetAmount: number;
@@ -19,6 +25,10 @@ export interface SavingsInputs {
 	/** SIP expected annual return as percentage, e.g. 10 for 10% */
 	sipReturnRatePercent: number;
 	investmentPath: InvestmentPath;
+	/** Step-Up SIP: fixed rupee amount added to monthly installment each year */
+	stepUpTopUpAmount: number;
+	/** Step-Up SIP: maximum monthly installment cap */
+	stepUpCapAmount: number;
 }
 
 export interface MonthlyDataPoint {
@@ -192,6 +202,41 @@ export function calculateSavings(inputs: SavingsInputs): SavingsResult {
 		};
 	}
 
+	if (investmentPath === 'stepup-sip') {
+		const principalSavedStepUp = totalDepositsWithFixedStepUp(roundedMonthly, years * 12, inputs.stepUpTopUpAmount, inputs.stepUpCapAmount);
+		const maturity = calculateFixedStepUpSipMaturity(roundedMonthly, years, sipReturnRatePercent, inputs.stepUpTopUpAmount, inputs.stepUpCapAmount);
+		const cgtResult = calculateFixedStepUpCapitalGains(roundedMonthly, years, sipReturnRatePercent, inputs.stepUpTopUpAmount, inputs.stepUpCapAmount);
+		const gainsEarned = maturity - principalSavedStepUp;
+		const percentageGains = principalSavedStepUp > 0 ? (gainsEarned / principalSavedStepUp) * 100 : 0;
+		const monthlySeries = buildFixedStepUpSipSeries(roundedMonthly, years, sipReturnRatePercent, inputs.stepUpTopUpAmount, inputs.stepUpCapAmount);
+
+		return {
+			inflationAdjusted,
+			estimatedAmount,
+			yearlyAmount,
+			monthlyAmount,
+			roundedMonthly,
+			investmentPath,
+			grossMaturity: maturity,
+			principalSaved: principalSavedStepUp,
+			gainsEarned,
+			percentageGains,
+			monthlySeries,
+			quarterlyRate: 0,
+			quarters: 0,
+			onePlusI: 0,
+			onePlusIN: 0,
+			onePlusINegThird: 0,
+			rdMaturity: 0,
+			interestEarned: 0,
+			percentageInterest: 0,
+			sipMaturity: maturity,
+			monthlyRate: 0,
+			sipMonths: years * 12,
+			cgtResult
+		};
+	}
+
 	const rd = calculateRdMaturity(roundedMonthly, years, rdInterestRatePercent);
 	const interestEarned = rd.maturity - principalSaved;
 	const percentageInterest = principalSaved > 0 ? (interestEarned / principalSaved) * 100 : 0;
@@ -231,5 +276,7 @@ export const DEFAULT_INPUTS: SavingsInputs = {
 	fdLoanPercent: 85,
 	rdInterestRatePercent: 6.4,
 	sipReturnRatePercent: 10,
-	investmentPath: 'rd'
+	investmentPath: 'rd',
+	stepUpTopUpAmount: 1500,
+	stepUpCapAmount: 23_000
 };

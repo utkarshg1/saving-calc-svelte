@@ -2,12 +2,15 @@ import type { SavingsInputs } from './savings';
 import { calculateSavings } from './savings';
 import { calculateTds, type TdsInputs } from './tds';
 import { calculateSipCapitalGains } from './sip';
-import { calculateMonthlyInvestmentXirr } from './xirr';
+import { calculateMonthlyInvestmentXirr, calculateVariableMonthlyXirr } from './xirr';
 import type { AdvancedInputs, CompareResult, InstrumentResult } from './types';
 import {
 	calculateStepUpRdMaturity,
 	calculateStepUpSipMaturity,
-	totalDepositsWithStepUp
+	totalDepositsWithStepUp,
+	calculateFixedStepUpSipMaturity,
+	calculateFixedStepUpCapitalGains,
+	totalDepositsWithFixedStepUp
 } from './stepUp';
 import { futureValueLumpsum, combineLumpsumAndRecurring } from './lumpsum';
 
@@ -62,6 +65,43 @@ function buildRdInstrument(
 			years,
 			tds.tdsApplicable ? tds.netMaturityAfterTds : grossMaturity
 		),
+		monthlyDeposit: monthly
+	};
+}
+
+function buildStepUpSipInstrument(
+	inputs: SavingsInputs,
+	monthly: number
+): InstrumentResult {
+	const years = inputs.years;
+	const months = years * 12;
+	const topUp = inputs.stepUpTopUpAmount;
+	const cap = inputs.stepUpCapAmount;
+
+	const principalSaved = totalDepositsWithFixedStepUp(monthly, months, topUp, cap);
+	const grossMaturity = calculateFixedStepUpSipMaturity(monthly, years, inputs.sipReturnRatePercent, topUp, cap);
+
+	const cgt = calculateFixedStepUpCapitalGains(monthly, years, inputs.sipReturnRatePercent, topUp, cap);
+	const taxRatio = cgt.grossMaturity > 0 ? cgt.totalTax / cgt.grossMaturity : 0;
+	const taxAmount = grossMaturity * taxRatio;
+	const netMaturity = grossMaturity - taxAmount;
+	const gainsEarned = grossMaturity - principalSaved;
+
+	const deposits = [];
+	for (let m = 1; m <= months; m++) {
+		deposits.push(Math.min(monthly + topUp * Math.floor((m - 1) / 12), cap));
+	}
+
+	return {
+		id: 'sip' as const,
+		label: 'Step-Up SIP',
+		riskLevel: 'high',
+		netMaturity,
+		grossMaturity,
+		principalSaved,
+		gainsEarned: Math.max(0, gainsEarned),
+		taxAmount,
+		xirrPercent: calculateVariableMonthlyXirr(deposits, netMaturity),
 		monthlyDeposit: monthly
 	};
 }
@@ -126,6 +166,9 @@ export function calculateCompare(
 
 	const rd = buildRdInstrument(inputs, monthly, advanced, tdsInputs);
 	const sip = buildSipInstrument(inputs, monthly, advanced);
+	const stepupSip = inputs.stepUpTopUpAmount > 0 || inputs.stepUpCapAmount > 0
+		? buildStepUpSipInstrument(inputs, monthly)
+		: undefined;
 
-	return { rd, sip };
+	return { rd, sip, stepupSip };
 }

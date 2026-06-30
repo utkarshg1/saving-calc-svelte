@@ -3,8 +3,9 @@
 	import type { SavingsInputs } from '$lib/calculations/savings';
 	import { buildMonthlySeries } from '$lib/calculations/savings';
 	import { buildSipMonthlySeries } from '$lib/calculations/sip';
+	import { buildFixedStepUpSipSeries } from '$lib/calculations/stepUp';
 	import { formatINR, formatINRCompact } from '$lib/utils/format';
-	import { sipExcessAfterTaxSummary, sipExcessToneClasses } from '$lib/utils/compareLabels';
+
 	import { fade } from 'svelte/transition';
 
 	export interface GrowthOverlayPoint {
@@ -13,12 +14,15 @@
 		principal: number;
 		rdBalance: number;
 		sipBalance: number;
+		stepupBalance?: number;
+		stepupPrincipal?: number;
 	}
 
 	export interface GrowthOverlaySeries {
 		points: GrowthOverlayPoint[];
 		rdNetMaturity: number;
 		sipNetMaturity: number;
+		stepupNetMaturity?: number;
 	}
 
 	interface TooltipRow {
@@ -27,7 +31,7 @@
 		value: string;
 		dotClass: string;
 		highlight?: boolean;
-		tone?: 'sip' | 'rd' | 'neutral';
+		tone?: 'sip' | 'rd' | 'stepup' | 'neutral';
 	}
 
 	interface Props {
@@ -36,7 +40,6 @@
 		monthly: number;
 		title?: string;
 		description?: string;
-		/** PDF/static export — no tooltips or interaction */
 		static?: boolean;
 	}
 
@@ -45,7 +48,7 @@
 		compare,
 		monthly,
 		title = 'Growth Overlay',
-		description = 'RD vs SIP balance over time (principal reference)',
+		description = 'RD vs SIP vs Step-Up SIP balance over time (principal reference)',
 		static: isStatic = false
 	}: Props = $props();
 
@@ -62,10 +65,17 @@
 
 	const activeIndex = $derived(pinnedIndex ?? hoveredIndex);
 
+	const hasStepUp = $derived(!!compare.stepupSip);
+
 	const rdSeries = $derived(buildMonthlySeries(monthly, inputs.years, inputs.rdInterestRatePercent));
 	const sipSeries = $derived(buildSipMonthlySeries(monthly, inputs.years, inputs.sipReturnRatePercent));
+	const stepupSeries = $derived(
+		hasStepUp
+			? buildFixedStepUpSipSeries(monthly, inputs.years, inputs.sipReturnRatePercent, inputs.stepUpTopUpAmount, inputs.stepUpCapAmount)
+			: null
+	);
 
-	const dataLen = $derived(Math.max(rdSeries.length, sipSeries.length));
+	const dataLen = $derived(Math.max(rdSeries.length, sipSeries.length, stepupSeries?.length ?? 0));
 	const lastIndex = $derived(Math.max(dataLen - 1, 0));
 
 	const overlaySeries = $derived.by((): GrowthOverlaySeries => {
@@ -73,25 +83,25 @@
 		for (let i = 0; i < dataLen; i++) {
 			const rd = rdSeries[i];
 			const sip = sipSeries[i];
+			const step = stepupSeries?.[i];
 			if (!rd || !sip) continue;
 			points.push({
 				month: rd.month,
 				year: rd.year,
 				principal: rd.principal,
 				rdBalance: i === lastIndex ? compare.rd.netMaturity : rd.balance,
-				sipBalance: i === lastIndex ? compare.sip.netMaturity : sip.balance
+				sipBalance: i === lastIndex ? compare.sip.netMaturity : sip.balance,
+				stepupBalance: step ? (i === lastIndex ? (compare.stepupSip?.netMaturity ?? step.balance) : step.balance) : undefined,
+				stepupPrincipal: step ? step.principal : undefined
 			});
 		}
 		return {
 			points,
 			rdNetMaturity: compare.rd.netMaturity,
-			sipNetMaturity: compare.sip.netMaturity
+			sipNetMaturity: compare.sip.netMaturity,
+			stepupNetMaturity: compare.stepupSip?.netMaturity
 		};
 	});
-
-	const excessSummary = $derived(
-		sipExcessAfterTaxSummary(compare.sip.netMaturity, compare.rd.netMaturity)
-	);
 
 	const chartWidth = $derived(VB_W - padding.left - padding.right);
 	const chartHeight = $derived(VB_H - padding.top - padding.bottom);
@@ -99,7 +109,7 @@
 
 	const maxY = $derived(
 		Math.max(
-			...overlaySeries.points.map((d) => Math.max(d.rdBalance, d.sipBalance, d.principal)),
+			...overlaySeries.points.map((d) => Math.max(d.rdBalance, d.sipBalance, d.stepupBalance ?? 0, d.principal, d.stepupPrincipal ?? 0)),
 			1
 		)
 	);
@@ -116,16 +126,24 @@
 		return (xPos(i) / VB_W) * 100;
 	}
 
-	function buildLinePath(key: 'rdBalance' | 'sipBalance' | 'principal'): string {
+	function buildLinePath(key: 'rdBalance' | 'sipBalance' | 'stepupBalance' | 'principal' | 'stepupPrincipal'): string {
 		const pts = overlaySeries.points;
 		if (pts.length === 0) return '';
-		return pts.map((d, i) => `${i === 0 ? 'M' : 'L'} ${xPos(i)} ${yPos(d[key])}`).join(' ');
+		return pts.map((d, i) => {
+			const val = d[key];
+			if (val === undefined) return '';
+			return `${i === 0 ? 'M' : 'L'} ${xPos(i)} ${yPos(val)}`;
+		}).filter(Boolean).join(' ');
 	}
 
-	function buildAreaPath(key: 'rdBalance' | 'sipBalance'): string {
+	function buildAreaPath(key: 'rdBalance' | 'sipBalance' | 'stepupBalance'): string {
 		const pts = overlaySeries.points;
 		if (pts.length === 0) return '';
-		const line = pts.map((d, i) => `${i === 0 ? 'M' : 'L'} ${xPos(i)} ${yPos(d[key])}`).join(' ');
+		const line = pts.map((d, i) => {
+			const val = d[key];
+			if (val === undefined) return '';
+			return `${i === 0 ? 'M' : 'L'} ${xPos(i)} ${yPos(val)}`;
+		}).filter(Boolean).join(' ');
 		const lastX = xPos(pts.length - 1);
 		const firstX = xPos(0);
 		return `${line} L ${lastX} ${baseY} L ${firstX} ${baseY} Z`;
@@ -162,7 +180,6 @@
 
 	const tooltipRows = $derived.by((): TooltipRow[] => {
 		if (!activePoint) return [];
-		const delta = activePoint.sipBalance - activePoint.rdBalance;
 		const rows: TooltipRow[] = [
 			{
 				key: 'principal',
@@ -184,32 +201,21 @@
 			}
 		];
 
-		if (delta > 0) {
+		if (activePoint.stepupBalance !== undefined) {
 			rows.push({
-				key: 'delta',
-				label: 'SIP ahead',
-				value: `+${formatINR(delta)}`,
-				dotClass: 'bg-indigo-500',
-				highlight: true,
-				tone: 'sip'
+				key: 'stepup',
+				label: 'Step-Up',
+				value: formatINR(activePoint.stepupBalance),
+				dotClass: 'bg-amber-500'
 			});
-		} else if (delta < 0) {
+		}
+
+		if (activePoint.stepupPrincipal !== undefined) {
 			rows.push({
-				key: 'delta',
-				label: 'RD ahead',
-				value: `+${formatINR(Math.abs(delta))}`,
-				dotClass: 'bg-teal-500',
-				highlight: true,
-				tone: 'rd'
-			});
-		} else {
-			rows.push({
-				key: 'delta',
-				label: 'Difference',
-				value: formatINR(0),
-				dotClass: 'bg-gray-300',
-				highlight: true,
-				tone: 'neutral'
+				key: 'stepupPrincipal',
+				label: 'Step-Up Principal',
+				value: formatINR(activePoint.stepupPrincipal),
+				dotClass: 'border border-rose-500 bg-white'
 			});
 		}
 
@@ -305,7 +311,7 @@
 			preserveAspectRatio="xMidYMid meet"
 			class="block h-full w-full"
 			role="img"
-			aria-label="RD vs SIP growth over time with principal reference"
+			aria-label="RD vs SIP vs Step-Up SIP growth over time with principal reference"
 		>
 			<defs>
 				<linearGradient id="growthRdFill" x1="0" y1="0" x2="0" y2="1">
@@ -315,6 +321,10 @@
 				<linearGradient id="growthSipFill" x1="0" y1="0" x2="0" y2="1">
 					<stop offset="0%" stop-color="#6366f1" stop-opacity="0.1" />
 					<stop offset="100%" stop-color="#6366f1" stop-opacity="0" />
+				</linearGradient>
+				<linearGradient id="growthStepupFill" x1="0" y1="0" x2="0" y2="1">
+					<stop offset="0%" stop-color="#f59e0b" stop-opacity="0.1" />
+					<stop offset="100%" stop-color="#f59e0b" stop-opacity="0" />
 				</linearGradient>
 			</defs>
 
@@ -344,6 +354,9 @@
 
 			<path d={buildAreaPath('rdBalance')} fill="url(#growthRdFill)" />
 			<path d={buildAreaPath('sipBalance')} fill="url(#growthSipFill)" />
+			{#if hasStepUp}
+				<path d={buildAreaPath('stepupBalance')} fill="url(#growthStepupFill)" />
+			{/if}
 
 			<path
 				d={buildLinePath('principal')}
@@ -370,6 +383,25 @@
 				stroke-linecap="round"
 				stroke-linejoin="round"
 			/>
+			{#if hasStepUp}
+				<path
+					d={buildLinePath('stepupBalance')}
+					fill="none"
+					stroke="#f59e0b"
+					stroke-width="3.5"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				/>
+				<path
+					d={buildLinePath('stepupPrincipal')}
+					fill="none"
+					stroke="#e11d48"
+					stroke-width="2"
+					stroke-dasharray="6 5"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				/>
+			{/if}
 
 			{#if !isStatic && activeIndex !== null && activePoint}
 				<circle
@@ -396,6 +428,26 @@
 					stroke="#fff"
 					stroke-width="2"
 				/>
+				{#if hasStepUp && activePoint.stepupBalance !== undefined}
+					<circle
+						cx={xPos(activeIndex)}
+						cy={yPos(activePoint.stepupBalance)}
+						r="4.5"
+						fill="#f59e0b"
+						stroke="#fff"
+						stroke-width="2"
+					/>
+				{/if}
+				{#if hasStepUp && activePoint.stepupPrincipal !== undefined}
+					<circle
+						cx={xPos(activeIndex)}
+						cy={yPos(activePoint.stepupPrincipal)}
+						r="4"
+						fill="#fff"
+						stroke="#e11d48"
+						stroke-width="2"
+					/>
+				{/if}
 			{/if}
 
 			{#if !isStatic}
@@ -433,26 +485,28 @@
 		</svg>
 	</div>
 
-	<div class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-		<div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-gray-500">
+	<div class="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-gray-500">
+		<span class="flex items-center gap-1.5">
+			<span class="h-0 w-3.5 border-t border-dashed border-gray-400"></span>
+			Principal
+		</span>
+		<span class="flex items-center gap-1.5">
+			<span class="h-1 w-3 rounded-full bg-teal-500"></span>
+			RD
+		</span>
+		<span class="flex items-center gap-1.5">
+			<span class="h-1 w-3 rounded-full bg-indigo-500"></span>
+			SIP
+		</span>
+		{#if hasStepUp}
 			<span class="flex items-center gap-1.5">
-				<span class="h-0 w-3.5 border-t border-dashed border-gray-400"></span>
-				Principal
+				<span class="h-1 w-3 rounded-full bg-amber-500"></span>
+				Step-Up
 			</span>
 			<span class="flex items-center gap-1.5">
-				<span class="h-1 w-3 rounded-full bg-teal-500"></span>
-				RD
+				<span class="h-0 w-3.5 border-t border-dashed border-rose-500"></span>
+				Step-Up Principal
 			</span>
-			<span class="flex items-center gap-1.5">
-				<span class="h-1 w-3 rounded-full bg-indigo-500"></span>
-				SIP
-			</span>
-		</div>
-		<p class="text-right text-xs text-gray-500" aria-live="polite">
-			<span>{excessSummary.label}:</span>
-			<span class="font-mono-num ml-1 tabular-nums font-medium {sipExcessToneClasses(excessSummary.tone)}">
-				{excessSummary.amount}
-			</span>
-		</p>
+		{/if}
 	</div>
 </div>

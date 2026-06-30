@@ -85,6 +85,8 @@ export function buildCompactQuery(snapshot: ScenarioSnapshot): string {
 
 	setIfDifferent(params, 'ls', advanced.lumpsumAmount, DEFAULT_ADVANCED_INPUTS.lumpsumAmount);
 	setIfDifferent(params, 'su', advanced.stepUpPercentAnnual, DEFAULT_ADVANCED_INPUTS.stepUpPercentAnnual);
+	setIfDifferent(params, 'tup', inputs.stepUpTopUpAmount, DEFAULT_INPUTS.stepUpTopUpAmount);
+	setIfDifferent(params, 'cap', inputs.stepUpCapAmount, DEFAULT_INPUTS.stepUpCapAmount);
 
 	return params.toString();
 }
@@ -107,13 +109,15 @@ export function parseCompactQuery(searchParams: URLSearchParams): ScenarioSnapsh
 	return {
 		inputs: {
 			...DEFAULT_INPUTS,
-			investmentPath: path === 'sip' ? 'sip' : path === 'rd' ? 'rd' : DEFAULT_INPUTS.investmentPath,
+			investmentPath: path === 'sip' ? 'sip' : path === 'stepup-sip' ? 'stepup-sip' : path === 'rd' ? 'rd' : DEFAULT_INPUTS.investmentPath,
 			targetAmount: num('t', DEFAULT_INPUTS.targetAmount),
 			years: num('y', DEFAULT_INPUTS.years),
 			inflationRatePercent: num('inf', DEFAULT_INPUTS.inflationRatePercent),
 			fdLoanPercent: num('fd', DEFAULT_INPUTS.fdLoanPercent),
 			rdInterestRatePercent: num('rd', DEFAULT_INPUTS.rdInterestRatePercent),
-			sipReturnRatePercent: num('sip', DEFAULT_INPUTS.sipReturnRatePercent)
+			sipReturnRatePercent: num('sip', DEFAULT_INPUTS.sipReturnRatePercent),
+			stepUpTopUpAmount: num('tup', DEFAULT_INPUTS.stepUpTopUpAmount),
+			stepUpCapAmount: num('cap', DEFAULT_INPUTS.stepUpCapAmount)
 		},
 		tdsInputs: {
 			...DEFAULT_TDS_INPUTS,

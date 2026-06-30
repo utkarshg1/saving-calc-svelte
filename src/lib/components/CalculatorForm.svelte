@@ -105,4 +105,37 @@
 			{/if}
 		</div>
 	</div>
+
+	{#if inputs.investmentPath === 'stepup-sip'}
+		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+			<div>
+				<label for="top-up" class="mb-1.5 block text-sm font-medium text-slate-700">
+					Annual Top-up
+				</label>
+				<NumericInput
+					id="top-up"
+					value={inputs.stepUpTopUpAmount}
+					min={0}
+					step={100}
+					prefix="₹"
+					oncommit={(n) => commit('stepUpTopUpAmount', n)}
+				/>
+				<p class="mt-1 text-xs text-slate-400">Fixed amount added to monthly installment each year</p>
+			</div>
+			<div>
+				<label for="cap" class="mb-1.5 block text-sm font-medium text-slate-700">
+					Monthly Cap
+				</label>
+				<NumericInput
+					id="cap"
+					value={inputs.stepUpCapAmount}
+					min={0}
+					step={1000}
+					prefix="₹"
+					oncommit={(n) => commit('stepUpCapAmount', n)}
+				/>
+				<p class="mt-1 text-xs text-slate-400">Maximum monthly installment amount</p>
+			</div>
+		</div>
+	{/if}
 </div>
