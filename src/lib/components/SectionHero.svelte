@@ -1,11 +1,14 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
+
 	interface Props {
 		title: string;
 		description: string;
 		accent?: string;
+		children?: Snippet;
 	}
 
-	let { title, description, accent = 'teal' }: Props = $props();
+	let { title, description, accent = 'teal', children }: Props = $props();
 
 	const accentClasses: Record<string, string> = {
 		teal: 'from-teal-500/20 to-teal-600/5 border-teal-200/50',
@@ -18,6 +21,13 @@
 </script>
 
 <div class="animate-fade-up mb-6 rounded-2xl border bg-gradient-to-br p-5 sm:p-6 {accentClasses[accent]}">
-	<h1 class="font-display text-2xl font-bold text-slate-900 sm:text-3xl">{title}</h1>
-	<p class="mt-2 max-w-2xl text-sm leading-relaxed text-slate-500">{description}</p>
+	<div class="flex items-center justify-between gap-4">
+		<div>
+			<h1 class="font-display text-2xl font-bold text-slate-900 sm:text-3xl">{title}</h1>
+			<p class="mt-2 max-w-2xl text-sm leading-relaxed text-slate-500">{description}</p>
+		</div>
+		{#if children}
+			{@render children()}
+		{/if}
+	</div>
 </div>

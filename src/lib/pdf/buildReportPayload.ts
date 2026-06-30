@@ -2,6 +2,7 @@ import { calculateSavings, type SavingsInputs } from '$lib/calculations/savings'
 import { calculateTds, type TdsInputs, type TdsResult } from '$lib/calculations/tds';
 import type { CapitalGainsResult } from '$lib/calculations/capitalGains';
 import { buildSipSensitivityTable, type SipSensitivityRow } from '$lib/calculations/sip';
+import { buildFixedStepUpSipSensitivityTable } from '$lib/calculations/stepUp';
 import { calculateMonthlyInvestmentXirr } from '$lib/calculations/xirr';
 
 export interface ComparisonItem {
@@ -18,6 +19,7 @@ export interface ReportPayload {
 	cgtResult: CapitalGainsResult | null;
 	comparisonItems: ComparisonItem[];
 	sipSensitivity: SipSensitivityRow[];
+	stepupSensitivity?: SipSensitivityRow[];
 	xirrPercent: number | null;
 	generatedAt: string;
 }
@@ -25,6 +27,7 @@ export interface ReportPayload {
 export function buildReportPayload(inputs: SavingsInputs, tdsInputs: TdsInputs): ReportPayload {
 	const result = calculateSavings(inputs);
 	const isSip = inputs.investmentPath === 'sip' || inputs.investmentPath === 'stepup-sip';
+	const isStepUp = inputs.investmentPath === 'stepup-sip';
 
 	const tdsResult = isSip
 		? null
@@ -65,6 +68,16 @@ export function buildReportPayload(inputs: SavingsInputs, tdsInputs: TdsInputs):
 			)
 		: [];
 
+	const stepupSensitivity = isStepUp
+		? buildFixedStepUpSipSensitivityTable(
+				result.roundedMonthly,
+				inputs.years,
+				inputs.sipReturnRatePercent,
+				inputs.stepUpTopUpAmount,
+				inputs.stepUpCapAmount
+			)
+		: undefined;
+
 	const xirrPercent = calculateMonthlyInvestmentXirr(
 		result.roundedMonthly,
 		inputs.years,
@@ -79,6 +92,7 @@ export function buildReportPayload(inputs: SavingsInputs, tdsInputs: TdsInputs):
 		cgtResult,
 		comparisonItems,
 		sipSensitivity,
+		stepupSensitivity,
 		xirrPercent,
 		generatedAt: new Date().toISOString()
 	};

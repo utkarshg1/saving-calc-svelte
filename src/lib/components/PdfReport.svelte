@@ -6,6 +6,7 @@
 	import BreakdownChart from '$lib/components/BreakdownChart.svelte';
 	import CalculationFlow from '$lib/components/CalculationFlow.svelte';
 	import SipSensitivityTable from '$lib/components/SipSensitivityTable.svelte';
+	import StepUpSchedule from '$lib/components/StepUpSchedule.svelte';
 	import type { SavingsInputs, SavingsResult } from '$lib/calculations/savings';
 	import type { TdsInputs, TdsResult } from '$lib/calculations/tds';
 	import type { CapitalGainsResult } from '$lib/calculations/capitalGains';
@@ -28,6 +29,7 @@
 		cgtResult?: CapitalGainsResult | null;
 		comparisonItems: ComparisonItem[];
 		sipSensitivity?: SipSensitivityRow[];
+		stepupSensitivity?: SipSensitivityRow[];
 		xirrPercent?: number | null;
 		generatedAt?: Date;
 	}
@@ -40,11 +42,13 @@
 		cgtResult,
 		comparisonItems,
 		sipSensitivity = [],
+		stepupSensitivity = [],
 		xirrPercent = null,
 		generatedAt = new Date()
 	}: Props = $props();
 
 	const isSip = $derived(inputs.investmentPath === 'sip' || inputs.investmentPath === 'stepup-sip');
+	const isStepUp = $derived(inputs.investmentPath === 'stepup-sip');
 	const tdsApplies = $derived(tdsResult?.tdsApplicable ?? false);
 	const cgtApplies = $derived(cgtResult != null && cgtResult.totalTax > 0);
 	const dateStr = $derived(
@@ -79,7 +83,7 @@
 			<div class="pdf-kv-grid">
 				<div class="pdf-kv-row">
 					<span class="pdf-kv-label">Investment Path</span>
-					<span class="pdf-kv-value">{isSip ? 'SIP' : 'RD'}</span>
+					<span class="pdf-kv-value">{inputs.investmentPath === 'stepup-sip' ? 'Step-Up SIP' : isSip ? 'SIP' : 'RD'}</span>
 				</div>
 				<div class="pdf-kv-row">
 					<span class="pdf-kv-label">Amount to Save</span>
@@ -107,6 +111,16 @@
 					<span class="pdf-kv-label">Monthly Investment</span>
 					<span class="pdf-kv-value">{formatINR(result.roundedMonthly)}</span>
 				</div>
+				{#if inputs.investmentPath === 'stepup-sip'}
+					<div class="pdf-kv-row">
+						<span class="pdf-kv-label">Annual Top-up</span>
+						<span class="pdf-kv-value">+{formatINR(inputs.stepUpTopUpAmount)}/yr</span>
+					</div>
+					<div class="pdf-kv-row">
+						<span class="pdf-kv-label">Monthly Cap</span>
+						<span class="pdf-kv-value">{formatINR(inputs.stepUpCapAmount)}/mo</span>
+					</div>
+				{/if}
 			</div>
 		</div>
 
@@ -255,7 +269,23 @@
 	<section class="pdf-page pdf-page--charts pdf-page-break">
 		<h2 class="pdf-card-title pdf-charts-heading">Visual Analysis</h2>
 
-		{#if isSip && sipSensitivity.length > 0}
+		{#if isStepUp}
+			<div class="pdf-sensitivity-block">
+				<StepUpSchedule
+					baseMonthly={result.roundedMonthly}
+					topUpAmount={inputs.stepUpTopUpAmount}
+					cap={inputs.stepUpCapAmount}
+					years={inputs.years}
+				/>
+			</div>
+			<div class="pdf-sensitivity-block">
+				<SipSensitivityTable
+					rows={stepupSensitivity}
+					baseReturnPercent={inputs.sipReturnRatePercent}
+					compact
+				/>
+			</div>
+		{:else if isSip && sipSensitivity.length > 0}
 			<div class="pdf-sensitivity-block">
 				<SipSensitivityTable
 					rows={sipSensitivity}

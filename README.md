@@ -2,14 +2,23 @@
 
 A SvelteKit savings calculator by **Utkarsh Gaikwad** — inflation-adjusted RD/SIP planning with shareable links. No database or backend required.
 
-**Version:** 2.6.0
+**Version:** 2.7.0
 
-## What's new in 2.6.0
+## What's new in 2.7.0
+
+- **Step-Up SIP formulas in Calculation Flow** — "How It Works" now shows the correct iterative compounding formula (`Dₘ = min(Base + TopUp×⌊(m-1)/12⌋, Cap)`) and the proper monthly interest rate for Step-Up SIP instead of the standard SIP formula.
+- **Step-Up schedule + sensitivity in export PDF** — The main report PDF now includes the Step-Up Schedule and Return Sensitivity table (schedule first, sensitivity second, then charts) for Step-Up SIP mode.
+- **Compare PDF cleanup** — Step-Up schedule and sensitivity tables removed from the compare PDF; top-up/cap info bar now reads "Base SIP ₹{amount} + ₹{topUp}/yr top-up · capped at ₹{cap}/mo".
+
+<details>
+<summary>Previous (2.6.0)</summary>
 
 - **Step-Up SIP on Compare page** — New settings panel for annual top-up amount and monthly cap. The compare page displays three cards (RD, SIP, Step-Up SIP) with a "Best" badge on the highest net-gain instrument. Gains comparison summaries for all pairs (SIP vs RD, Step-Up vs RD, Step-Up vs SIP).
 - **Step-Up line on Growth Overlay chart** — Amber solid line for Step-Up SIP balance, plus a rose dashed Step-Up Principal line showing cumulative deposits. Legend and tooltip updated accordingly.
 - **SIP vs RD excess removed from chart** — The tooltip delta row and bottom excess summary have been removed from the Growth Overlay chart (kept in the comparison card section below).
 - **Comparison card refinements** — Each card now shows "Principal", "Net Gains" (gains − tax), and monthly deposit detail. Step-Up SIP card displays the top-up and cap information.
+
+</details>
 
 <details>
 <summary>Previous (2.5.4)</summary>

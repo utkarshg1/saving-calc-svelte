@@ -116,7 +116,7 @@
 					id="top-up"
 					value={inputs.stepUpTopUpAmount}
 					min={0}
-					step={100}
+					step={1}
 					prefix="₹"
 					oncommit={(n) => commit('stepUpTopUpAmount', n)}
 				/>
@@ -130,7 +130,7 @@
 					id="cap"
 					value={inputs.stepUpCapAmount}
 					min={0}
-					step={1000}
+					step={1}
 					prefix="₹"
 					oncommit={(n) => commit('stepUpCapAmount', n)}
 				/>

@@ -2,15 +2,28 @@
 	import { onMount, tick } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import PdfReport from '$lib/components/PdfReport.svelte';
-	import { DEFAULT_INPUTS } from '$lib/calculations/savings';
-	import type { ReportPayload } from '$lib/pdf/buildReportPayload';
-	import { clearReportPayload, loadReportPayload } from '$lib/pdf/generatePdf';
+	import { calculateSuite } from '$lib/calculations/index';
+	import DualPathComparison from '$lib/components/DualPathComparison.svelte';
+	import DualGrowthChart from '$lib/components/DualGrowthChart.svelte';
+	import { formatINR } from '$lib/utils/format';
+	import type { SavingsInputs } from '$lib/calculations/savings';
+	import type { TdsInputs } from '$lib/calculations/tds';
+	import type { AdvancedInputs } from '$lib/calculations/types';
 	import { claimPrintSession, waitForPrintDialogClose } from '$lib/pdf/printFlow';
 
-	let payload = $state<ReportPayload | null>(null);
+	const COMPARE_KEY = 'savings-compare-report';
+
+	interface StoredPayload {
+		inputs: SavingsInputs;
+		tdsInputs: TdsInputs;
+		advanced: AdvancedInputs;
+	}
+
 	let error = $state<string | null>(null);
 	let printing = $state(true);
+	let compare = $state<ReturnType<typeof calculateSuite>['suite']['compare'] | null>(null);
+	let monthly = $state(0);
+	let inputs = $state<SavingsInputs | null>(null);
 
 	onMount(() => {
 		const reportId = page.url.searchParams.get('id');
@@ -23,32 +36,29 @@
 			detachPrintHandlers?.();
 			detachPrintHandlers = undefined;
 			printing = false;
-			if (reportId) clearReportPayload(reportId);
+			if (reportId) localStorage.removeItem(`${COMPARE_KEY}:${reportId}`);
 		}
 
 		void (async () => {
 			try {
-				const raw = loadReportPayload(reportId);
-
-				if (!raw) {
-					error = 'Report data not found. Please export again from the calculator.';
+				if (!reportId) {
+					error = 'No report ID. Please export again from the compare page.';
 					printing = false;
 					return;
 				}
 
-				const parsed = JSON.parse(raw) as ReportPayload;
-				if (!parsed.inputs.investmentPath) {
-					parsed.inputs.investmentPath = 'rd';
+				const raw = localStorage.getItem(`${COMPARE_KEY}:${reportId}`);
+				if (!raw) {
+					error = 'Report data not found. Please export again from the compare page.';
+					printing = false;
+					return;
 				}
-				if (parsed.inputs.sipReturnRatePercent === undefined) {
-					parsed.inputs.sipReturnRatePercent = DEFAULT_INPUTS.sipReturnRatePercent;
-				}
-				if (parsed.cgtResult === undefined) parsed.cgtResult = null;
-				if (parsed.tdsResult === undefined) parsed.tdsResult = null;
-				if (parsed.sipSensitivity === undefined) parsed.sipSensitivity = [];
-				if (parsed.stepupSensitivity === undefined) parsed.stepupSensitivity = [];
-				if (parsed.xirrPercent === undefined) parsed.xirrPercent = null;
-				payload = parsed;
+
+				const payload = JSON.parse(raw) as StoredPayload;
+				const suite = calculateSuite(payload.inputs, payload.tdsInputs, payload.advanced);
+				compare = suite.suite.compare;
+				monthly = suite.result.roundedMonthly;
+				inputs = payload.inputs;
 
 				await tick();
 				if (document.fonts?.ready) {
@@ -58,7 +68,7 @@
 					requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
 				);
 
-				if (!reportId || !claimPrintSession(reportId)) {
+				if (!claimPrintSession(reportId)) {
 					printing = false;
 					return;
 				}
@@ -80,31 +90,44 @@
 {#if error}
 	<div class="report-error">
 		<p>{error}</p>
-		<a href="/">Back to calculator</a>
+		<a href="/compare">Back to compare</a>
 	</div>
-{:else if payload}
+{:else if compare && inputs}
 	<div class="report-actions">
 		{#if printing}
 			<p class="report-actions-hint">
 				In the print dialog, choose <strong>Save as PDF</strong> as the destination.
 			</p>
 		{/if}
-		<button type="button" class="report-back-btn" onclick={() => goto('/')}>
-			Back to Calculator
+		<button type="button" class="report-back-btn" onclick={() => goto('/compare')}>
+			Back to Compare
 		</button>
 	</div>
-		<PdfReport
-			inputs={payload.inputs}
-			tdsInputs={payload.tdsInputs}
-			result={payload.result}
-			tdsResult={payload.tdsResult}
-			cgtResult={payload.cgtResult}
-			sipSensitivity={payload.sipSensitivity}
-			stepupSensitivity={payload.stepupSensitivity}
-			xirrPercent={payload.xirrPercent}
-			comparisonItems={payload.comparisonItems}
-			generatedAt={new Date(payload.generatedAt)}
-		/>
+
+	<div class="report-content">
+		<section class="mb-8">
+			<h2 class="font-display mb-4 text-lg font-semibold text-slate-800">RD vs SIP{inputs.investmentPath === 'stepup-sip' ? ' vs Step-Up SIP' : ''}</h2>
+			{#if inputs.investmentPath === 'stepup-sip'}
+				<div class="mb-4 rounded-lg border border-amber-200/80 bg-amber-50/60 px-4 py-2.5 text-xs text-amber-800">
+					Base SIP {formatINR(monthly)} + {formatINR(inputs.stepUpTopUpAmount)}/yr top-up
+					<span class="mx-2 text-amber-300">·</span>
+					capped at {formatINR(inputs.stepUpCapAmount)}/mo
+				</div>
+			{/if}
+			<DualPathComparison {compare} {inputs} compact />
+		</section>
+
+		<section class="chart-section mb-8">
+			<DualGrowthChart
+				{inputs}
+				{compare}
+				monthly={monthly}
+				title="Growth Overlay"
+				description="RD vs SIP{inputs.investmentPath === 'stepup-sip' ? ' vs Step-Up SIP' : ''} balance over time (principal reference)"
+				static
+			/>
+		</section>
+	</div>
 {:else}
 	<p class="report-hint" aria-live="polite">Preparing report…</p>
 {/if}
@@ -180,10 +203,17 @@
 		background: #0f766e;
 	}
 
+	.report-content {
+		padding: 20px;
+	}
+
 	@media print {
 		.report-hint,
 		.report-actions {
 			display: none !important;
+		}
+		section.chart-section {
+			page-break-before: always;
 		}
 	}
 </style>

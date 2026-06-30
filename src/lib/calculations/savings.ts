@@ -2,7 +2,8 @@ import type { CapitalGainsResult } from './capitalGains';
 import {
 	buildSipMonthlySeries,
 	calculateSipCapitalGains,
-	calculateSipMaturity
+	calculateSipMaturity,
+	monthlyRateFromAnnual
 } from './sip';
 import {
 	buildFixedStepUpSipSeries,
@@ -231,7 +232,7 @@ export function calculateSavings(inputs: SavingsInputs): SavingsResult {
 			interestEarned: 0,
 			percentageInterest: 0,
 			sipMaturity: maturity,
-			monthlyRate: 0,
+			monthlyRate: monthlyRateFromAnnual(sipReturnRatePercent),
 			sipMonths: years * 12,
 			cgtResult
 		};

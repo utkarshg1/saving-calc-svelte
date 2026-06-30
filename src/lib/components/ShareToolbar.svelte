@@ -35,6 +35,7 @@
 	}
 
 	function exportPng() {
+		const isStepUp = snapshot.inputs.investmentPath === 'stepup-sip';
 		downloadShareCard({
 			goalName: snapshot.inputs.investmentPath.toUpperCase() + ' Plan',
 			targetAmount: snapshot.inputs.targetAmount,
@@ -42,7 +43,8 @@
 			netMaturity: suite.netMaturity,
 			xirrPercent: suite.xirrPercent,
 			path: snapshot.inputs.investmentPath,
-			years: snapshot.inputs.years
+			years: snapshot.inputs.years,
+			...isStepUp ? { stepUpTopUp: snapshot.inputs.stepUpTopUpAmount, stepUpCap: snapshot.inputs.stepUpCapAmount } : {}
 		});
 	}
 

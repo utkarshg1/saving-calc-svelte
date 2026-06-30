@@ -18,6 +18,7 @@
 	let { inputs, result, tdsResult, cgtResult = null, compact = false }: Props = $props();
 
 	const isSip = $derived(inputs.investmentPath === 'sip' || inputs.investmentPath === 'stepup-sip');
+	const isStepUp = $derived(inputs.investmentPath === 'stepup-sip');
 
 	const baseSteps = $derived([
 		{
@@ -88,8 +89,10 @@
 			? [
 					{
 						id: 7,
-						title: 'SIP Compounding',
-						formula: `M = P × [((1+i)^n − 1) / i] × (1+i), R=${inputs.sipReturnRatePercent}%`,
+						title: isStepUp ? 'Step-Up SIP Compounding' : 'SIP Compounding',
+						formula: isStepUp
+							? `Dₘ = min(Base + TopUp×⌊(m-1)/12⌋, Cap) · Mₘ = Mₘ₋₁×(1+i) + Dₘ, R=${inputs.sipReturnRatePercent}%`
+							: `M = P × [((1+i)^n − 1) / i] × (1+i), R=${inputs.sipReturnRatePercent}%`,
 						value: formatINR(result.sipMaturity),
 						color: 'from-teal-500 to-teal-600'
 					},
@@ -246,7 +249,21 @@
 	</div>
 
 	<div class="mx-auto mt-4 max-w-3xl rounded-xl border border-teal-100 bg-teal-50/50 p-4 text-center">
-		{#if isSip}
+		{#if isStepUp}
+			<p class="text-xs font-medium tracking-wide text-teal-700 uppercase">Step-Up SIP Formula</p>
+			<p class="font-mono-num mt-2 break-words text-sm text-teal-900">
+				M = Σ Dₘ × (1 + i)<sup>n−m+1</sup>
+			</p>
+			<p class="font-mono-num mt-1 break-words text-xs text-teal-600">
+				Dₘ = min(Base + TopUp × ⌊(m−1)/12⌋, Cap)
+			</p>
+			<p class="font-mono-num mt-1 break-words text-xs text-teal-600">
+				Base = {formatINR(result.roundedMonthly)}, TopUp = {formatINR(inputs.stepUpTopUpAmount)}/yr, Cap = {formatINR(inputs.stepUpCapAmount)}, n = {result.sipMonths} months
+			</p>
+			<p class="font-mono-num mt-1 break-words text-xs text-teal-600">
+				i = (1 + {inputs.sipReturnRatePercent}%)<sup>1/12</sup> − 1 = {formatNumber(result.monthlyRate, 6)}
+			</p>
+		{:else if isSip}
 			<p class="text-xs font-medium tracking-wide text-teal-700 uppercase">SIP Formula</p>
 			<p class="font-mono-num mt-2 break-words text-sm text-teal-900">
 				M = P × [((1 + i)<sup>n</sup> − 1) / i] × (1 + i)

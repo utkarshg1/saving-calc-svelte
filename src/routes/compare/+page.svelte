@@ -3,17 +3,39 @@
 	import DualPathComparison from '$lib/components/DualPathComparison.svelte';
 	import DualGrowthChart from '$lib/components/DualGrowthChart.svelte';
 	import NumericInput from '$lib/components/NumericInput.svelte';
+	import { goto } from '$app/navigation';
 	import { scenario } from '$lib/stores/scenario.svelte';
 
 	const calc = $derived(scenario.suite);
 	const hasStepUpSip = $derived(!!calc.suite.compare.stepupSip);
+
+	const COMPARE_KEY = 'savings-compare-report';
+
+	function exportComparePdf() {
+		const payload = JSON.stringify({
+			inputs: scenario.inputs,
+			tdsInputs: scenario.tdsInputs,
+			advanced: scenario.advanced
+		});
+		const reportId = crypto.randomUUID();
+		localStorage.setItem(`${COMPARE_KEY}:${reportId}`, payload);
+		goto(`/report/compare?id=${reportId}`);
+	}
 </script>
 
 <SectionHero
 	title="Compare RD vs SIP{hasStepUpSip ? ' vs Step-Up SIP' : ''}"
 	description="Side-by-side comparison of net maturity, tax, gains, and XIRR for {hasStepUpSip ? 'recurring deposits, mutual fund SIPs, and step-up SIPs' : 'recurring deposits vs mutual fund SIPs'}."
 	accent="indigo"
-/>
+>
+	<button
+		type="button"
+		class="shrink-0 rounded-xl bg-gradient-to-br from-teal-600 to-teal-700 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg"
+		onclick={exportComparePdf}
+	>
+		Export PDF
+	</button>
+</SectionHero>
 
 <section class="mb-8">
 	<h2 class="font-display mb-4 text-lg font-semibold text-slate-800">RD vs SIP{hasStepUpSip ? ' vs Step-Up SIP' : ''}</h2>
@@ -27,7 +49,7 @@
 					id="cmp-topup"
 					value={scenario.inputs.stepUpTopUpAmount}
 					min={0}
-					step={100}
+					step={1}
 					prefix="₹"
 					oncommit={(n) => scenario.inputs = { ...scenario.inputs, stepUpTopUpAmount: n }}
 				/>
@@ -38,7 +60,7 @@
 					id="cmp-cap"
 					value={scenario.inputs.stepUpCapAmount}
 					min={0}
-					step={1000}
+					step={1}
 					prefix="₹"
 					oncommit={(n) => scenario.inputs = { ...scenario.inputs, stepUpCapAmount: n }}
 				/>

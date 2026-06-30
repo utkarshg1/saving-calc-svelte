@@ -8,6 +8,8 @@ export interface ShareCardData {
 	xirrPercent: number | null;
 	path: string;
 	years: number;
+	stepUpTopUp?: number;
+	stepUpCap?: number;
 }
 
 export function renderShareCard(data: ShareCardData): HTMLCanvasElement {
@@ -65,6 +67,15 @@ export function renderShareCard(data: ShareCardData): HTMLCanvasElement {
 		ctx.font = '700 40px ui-monospace, monospace';
 		ctx.fillText(m.value, x, y + 55);
 	});
+
+	if (data.stepUpTopUp !== undefined && data.stepUpCap !== undefined) {
+		ctx.fillStyle = 'rgba(255,255,255,0.5)';
+		ctx.font = '500 16px system-ui, sans-serif';
+		ctx.fillText('STEP-UP SIP', 60, 440);
+		ctx.fillStyle = '#fbbf24';
+		ctx.font = '600 26px ui-monospace, monospace';
+		ctx.fillText(`+${formatINR(data.stepUpTopUp)}/yr → cap ${formatINR(data.stepUpCap)}/mo`, 60, 475);
+	}
 
 	ctx.fillStyle = 'rgba(255,255,255,0.35)';
 	ctx.font = '400 18px system-ui, sans-serif';
