@@ -123,8 +123,13 @@
 				<p class="mt-1 text-xs text-slate-400">Fixed amount added to monthly installment each year</p>
 			</div>
 			<div>
-				<label for="cap" class="mb-1.5 block text-sm font-medium text-slate-700">
-					Monthly Cap
+				<label class="mb-1.5 flex cursor-pointer items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3 transition hover:border-teal-200">
+					<input
+						type="checkbox"
+						bind:checked={inputs.stepUpCapEnabled}
+						class="rounded border-slate-300 text-teal-600 focus:ring-teal-400"
+					/>
+					<span class="text-sm text-slate-700">Enable amount cap</span>
 				</label>
 				<NumericInput
 					id="cap"
@@ -132,6 +137,7 @@
 					min={0}
 					step={1}
 					prefix="₹"
+					disabled={!inputs.stepUpCapEnabled}
 					oncommit={(n) => commit('stepUpCapAmount', n)}
 				/>
 				<p class="mt-1 text-xs text-slate-400">Maximum monthly installment amount</p>

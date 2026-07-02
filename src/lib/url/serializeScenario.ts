@@ -87,6 +87,9 @@ export function buildCompactQuery(snapshot: ScenarioSnapshot): string {
 	setIfDifferent(params, 'su', advanced.stepUpPercentAnnual, DEFAULT_ADVANCED_INPUTS.stepUpPercentAnnual);
 	setIfDifferent(params, 'tup', inputs.stepUpTopUpAmount, DEFAULT_INPUTS.stepUpTopUpAmount);
 	setIfDifferent(params, 'cap', inputs.stepUpCapAmount, DEFAULT_INPUTS.stepUpCapAmount);
+	if (inputs.stepUpCapEnabled !== DEFAULT_INPUTS.stepUpCapEnabled) {
+		params.set('capen', inputs.stepUpCapEnabled ? '1' : '0');
+	}
 
 	return params.toString();
 }
@@ -117,7 +120,8 @@ export function parseCompactQuery(searchParams: URLSearchParams): ScenarioSnapsh
 			rdInterestRatePercent: num('rd', DEFAULT_INPUTS.rdInterestRatePercent),
 			sipReturnRatePercent: num('sip', DEFAULT_INPUTS.sipReturnRatePercent),
 			stepUpTopUpAmount: num('tup', DEFAULT_INPUTS.stepUpTopUpAmount),
-			stepUpCapAmount: num('cap', DEFAULT_INPUTS.stepUpCapAmount)
+			stepUpCapAmount: num('cap', DEFAULT_INPUTS.stepUpCapAmount),
+			stepUpCapEnabled: bool('capen', DEFAULT_INPUTS.stepUpCapEnabled)
 		},
 		tdsInputs: {
 			...DEFAULT_TDS_INPUTS,

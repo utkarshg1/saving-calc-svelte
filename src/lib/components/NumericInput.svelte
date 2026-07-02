@@ -10,6 +10,7 @@
 		suffix?: string;
 		/** Whole numbers only (e.g. years) */
 		integer?: boolean;
+		disabled?: boolean;
 		class?: string;
 	}
 
@@ -23,6 +24,7 @@
 		prefix,
 		suffix,
 		integer = false,
+		disabled = false,
 		class: className = ''
 	}: Props = $props();
 
@@ -117,8 +119,10 @@
 		type="text"
 		inputmode={integer ? 'numeric' : 'decimal'}
 		value={draft}
+		{disabled}
 		class="w-full max-w-full rounded-xl border-slate-200 bg-white py-3 text-slate-800 shadow-sm transition focus:border-teal-400 focus:ring-teal-400
 			{prefix ? 'pl-8 pr-4' : suffix ? 'py-3 pr-8 pl-4' : 'px-4'}
+			{disabled ? 'cursor-not-allowed opacity-50' : ''}
 			{className}"
 		onfocus={() => {
 			focused = true;

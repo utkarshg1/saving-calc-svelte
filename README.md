@@ -2,13 +2,20 @@
 
 A SvelteKit savings calculator by **Utkarsh Gaikwad** — inflation-adjusted RD/SIP planning with shareable links. No database or backend required.
 
-**Version:** 2.7.0
+**Version:** 2.8.0
 
-## What's new in 2.7.0
+## What's new in 2.8.0
+
+- **Optional amount cap for Step-Up SIP** — Added a checkbox to enable/disable the monthly installment cap in Step-Up SIP mode. Disabled by default; when unchecked the cap input is greyed out and no cap is applied (`Infinity`). Default cap value updated to ₹25,000.
+
+<details>
+<summary>Previous (2.7.0)</summary>
 
 - **Step-Up SIP formulas in Calculation Flow** — "How It Works" now shows the correct iterative compounding formula (`Dₘ = min(Base + TopUp×⌊(m-1)/12⌋, Cap)`) and the proper monthly interest rate for Step-Up SIP instead of the standard SIP formula.
 - **Step-Up schedule + sensitivity in export PDF** — The main report PDF now includes the Step-Up Schedule and Return Sensitivity table (schedule first, sensitivity second, then charts) for Step-Up SIP mode.
 - **Compare PDF cleanup** — Step-Up schedule and sensitivity tables removed from the compare PDF; top-up/cap info bar now reads "Base SIP ₹{amount} + ₹{topUp}/yr top-up · capped at ₹{cap}/mo".
+
+</details>
 
 <details>
 <summary>Previous (2.6.0)</summary>

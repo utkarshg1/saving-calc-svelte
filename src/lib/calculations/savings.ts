@@ -30,6 +30,8 @@ export interface SavingsInputs {
 	stepUpTopUpAmount: number;
 	/** Step-Up SIP: maximum monthly installment cap */
 	stepUpCapAmount: number;
+	/** Step-Up SIP: whether the monthly cap is enabled */
+	stepUpCapEnabled: boolean;
 }
 
 export interface MonthlyDataPoint {
@@ -204,12 +206,13 @@ export function calculateSavings(inputs: SavingsInputs): SavingsResult {
 	}
 
 	if (investmentPath === 'stepup-sip') {
-		const principalSavedStepUp = totalDepositsWithFixedStepUp(roundedMonthly, years * 12, inputs.stepUpTopUpAmount, inputs.stepUpCapAmount);
-		const maturity = calculateFixedStepUpSipMaturity(roundedMonthly, years, sipReturnRatePercent, inputs.stepUpTopUpAmount, inputs.stepUpCapAmount);
-		const cgtResult = calculateFixedStepUpCapitalGains(roundedMonthly, years, sipReturnRatePercent, inputs.stepUpTopUpAmount, inputs.stepUpCapAmount);
+		const effectiveCap = inputs.stepUpCapEnabled ? inputs.stepUpCapAmount : Infinity;
+		const principalSavedStepUp = totalDepositsWithFixedStepUp(roundedMonthly, years * 12, inputs.stepUpTopUpAmount, effectiveCap);
+		const maturity = calculateFixedStepUpSipMaturity(roundedMonthly, years, sipReturnRatePercent, inputs.stepUpTopUpAmount, effectiveCap);
+		const cgtResult = calculateFixedStepUpCapitalGains(roundedMonthly, years, sipReturnRatePercent, inputs.stepUpTopUpAmount, effectiveCap);
 		const gainsEarned = maturity - principalSavedStepUp;
 		const percentageGains = principalSavedStepUp > 0 ? (gainsEarned / principalSavedStepUp) * 100 : 0;
-		const monthlySeries = buildFixedStepUpSipSeries(roundedMonthly, years, sipReturnRatePercent, inputs.stepUpTopUpAmount, inputs.stepUpCapAmount);
+		const monthlySeries = buildFixedStepUpSipSeries(roundedMonthly, years, sipReturnRatePercent, inputs.stepUpTopUpAmount, effectiveCap);
 
 		return {
 			inflationAdjusted,
@@ -279,5 +282,6 @@ export const DEFAULT_INPUTS: SavingsInputs = {
 	sipReturnRatePercent: 10,
 	investmentPath: 'rd',
 	stepUpTopUpAmount: 1500,
-	stepUpCapAmount: 23_000
+	stepUpCapAmount: 25_000,
+	stepUpCapEnabled: false
 };

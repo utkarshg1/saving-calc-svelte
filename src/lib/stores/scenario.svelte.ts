@@ -24,7 +24,8 @@ class ScenarioStore {
 			...DEFAULT_INPUTS,
 			...snapshot.inputs,
 			stepUpTopUpAmount: snapshot.inputs.stepUpTopUpAmount ?? DEFAULT_INPUTS.stepUpTopUpAmount,
-			stepUpCapAmount: snapshot.inputs.stepUpCapAmount ?? DEFAULT_INPUTS.stepUpCapAmount
+			stepUpCapAmount: snapshot.inputs.stepUpCapAmount ?? DEFAULT_INPUTS.stepUpCapAmount,
+			stepUpCapEnabled: snapshot.inputs.stepUpCapEnabled ?? DEFAULT_INPUTS.stepUpCapEnabled
 		};
 		this.tdsInputs = { ...DEFAULT_TDS_INPUTS, ...snapshot.tdsInputs };
 		this.advanced = {
