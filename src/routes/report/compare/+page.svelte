@@ -110,8 +110,10 @@
 			{#if inputs.investmentPath === 'stepup-sip'}
 				<div class="mb-4 rounded-lg border border-amber-200/80 bg-amber-50/60 px-4 py-2.5 text-xs text-amber-800">
 					Base SIP {formatINR(monthly)} + {formatINR(inputs.stepUpTopUpAmount)}/yr top-up
-					<span class="mx-2 text-amber-300">·</span>
-					capped at {formatINR(inputs.stepUpCapAmount)}/mo
+					{#if inputs.stepUpCapEnabled}
+						<span class="mx-2 text-amber-300">·</span>
+						capped at {formatINR(inputs.stepUpCapAmount)}/mo
+					{/if}
 				</div>
 			{/if}
 			<DualPathComparison {compare} {inputs} compact />

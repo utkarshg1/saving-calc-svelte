@@ -10,6 +10,7 @@ export interface ShareCardData {
 	years: number;
 	stepUpTopUp?: number;
 	stepUpCap?: number;
+	stepUpCapEnabled?: boolean;
 }
 
 export function renderShareCard(data: ShareCardData): HTMLCanvasElement {
@@ -74,7 +75,8 @@ export function renderShareCard(data: ShareCardData): HTMLCanvasElement {
 		ctx.fillText('STEP-UP SIP', 60, 440);
 		ctx.fillStyle = '#fbbf24';
 		ctx.font = '600 26px ui-monospace, monospace';
-		ctx.fillText(`+${formatINR(data.stepUpTopUp)}/yr → cap ${formatINR(data.stepUpCap)}/mo`, 60, 475);
+		const capText = data.stepUpCapEnabled ? `cap ${formatINR(data.stepUpCap)}/mo` : 'no cap';
+		ctx.fillText(`+${formatINR(data.stepUpTopUp)}/yr → ${capText}`, 60, 475);
 	}
 
 	ctx.fillStyle = 'rgba(255,255,255,0.35)';

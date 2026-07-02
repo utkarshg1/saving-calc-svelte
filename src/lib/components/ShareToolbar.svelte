@@ -44,7 +44,7 @@
 			xirrPercent: suite.xirrPercent,
 			path: snapshot.inputs.investmentPath,
 			years: snapshot.inputs.years,
-			...isStepUp ? { stepUpTopUp: snapshot.inputs.stepUpTopUpAmount, stepUpCap: snapshot.inputs.stepUpCapAmount } : {}
+			...isStepUp ? { stepUpTopUp: snapshot.inputs.stepUpTopUpAmount, stepUpCap: snapshot.inputs.stepUpCapAmount, stepUpCapEnabled: snapshot.inputs.stepUpCapEnabled } : {}
 		});
 	}
 

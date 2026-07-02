@@ -96,7 +96,7 @@
 					<div class="{compact ? 'text-[9px]' : 'text-xs'} text-slate-400">
 						Monthly: {formatINR(inst.monthlyDeposit)}
 						{#if inst.label === 'Step-Up SIP' && inputs}
-							<span class="ml-1">+ {formatINR(inputs.stepUpTopUpAmount)}/yr → cap {formatINR(inputs.stepUpCapAmount)}</span>
+							<span class="ml-1">+ {formatINR(inputs.stepUpTopUpAmount)}/yr → cap {inputs.stepUpCapEnabled ? formatINR(inputs.stepUpCapAmount) : '-'}</span>
 						{/if}
 					</div>
 				</div>

@@ -258,7 +258,7 @@
 				Dₘ = min(Base + TopUp × ⌊(m−1)/12⌋, Cap)
 			</p>
 			<p class="font-mono-num mt-1 break-words text-xs text-teal-600">
-				Base = {formatINR(result.roundedMonthly)}, TopUp = {formatINR(inputs.stepUpTopUpAmount)}/yr, Cap = {formatINR(inputs.stepUpCapAmount)}, n = {result.sipMonths} months
+				Base = {formatINR(result.roundedMonthly)}, TopUp = {formatINR(inputs.stepUpTopUpAmount)}/yr, Cap = {inputs.stepUpCapEnabled ? formatINR(inputs.stepUpCapAmount) : '-'}, n = {result.sipMonths} months
 			</p>
 			<p class="font-mono-num mt-1 break-words text-xs text-teal-600">
 				i = (1 + {inputs.sipReturnRatePercent}%)<sup>1/12</sup> − 1 = {formatNumber(result.monthlyRate, 6)}

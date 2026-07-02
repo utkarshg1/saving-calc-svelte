@@ -116,10 +116,10 @@
 						<span class="pdf-kv-label">Annual Top-up</span>
 						<span class="pdf-kv-value">+{formatINR(inputs.stepUpTopUpAmount)}/yr</span>
 					</div>
-					<div class="pdf-kv-row">
-						<span class="pdf-kv-label">Monthly Cap</span>
-						<span class="pdf-kv-value">{formatINR(inputs.stepUpCapAmount)}/mo</span>
-					</div>
+				<div class="pdf-kv-row">
+					<span class="pdf-kv-label">Monthly Cap</span>
+					<span class="pdf-kv-value">{inputs.stepUpCapEnabled ? formatINR(inputs.stepUpCapAmount) + '/mo' : '-'}</span>
+				</div>
 				{/if}
 			</div>
 		</div>
