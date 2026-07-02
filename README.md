@@ -1,5 +1,7 @@
 # Utkarsh's Savings Calculator
 
+**Live demo:** [saving-calc-svelte.vercel.app](https://saving-calc-svelte.vercel.app/)
+
 A SvelteKit savings calculator by **Utkarsh Gaikwad** — inflation-adjusted RD/SIP planning with shareable links. No database or backend required.
 
 **Version:** 2.8.0
